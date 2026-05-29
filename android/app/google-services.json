@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "367191218212",
+    "project_id": "pocket-karcha-new",
+    "storage_bucket": "pocket-karcha-new.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:367191218212:android:08c4c90c1e06b0af3b20b1",
+        "android_client_info": {
+          "package_name": "com.pocket.karcha.expense.manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP2fnxQqTeMHTyEUm4gZwdBV0ilSEBnE8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

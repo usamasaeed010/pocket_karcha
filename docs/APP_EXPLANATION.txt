@@ -1,0 +1,282 @@
+================================================================================
+                    POCKET KARCHA — COMPLETE APP EXPLANATION
+                         (Based on actual app code v1.0.0)
+================================================================================
+
+App name (English) : Pocket Karcha
+App name (Urdu)    : پاکٹ خرچہ
+Description        : Personal expense tracker for Pakistan — Urdu/English
+Version            : 1.0.0 (build 1)
+Android package    : com.pocket.karcha.expense.manager
+iOS bundle ID      : com.pocket.karcha.expense.manager
+
+================================================================================
+1. WHAT IS THIS APP?
+================================================================================
+
+Pocket Karcha helps you track personal money — what you spent (You Gave), what
+you received (You Got), who owes you, and who you owe. It is built for Pakistan
+users with PKR-friendly defaults, English + Urdu language, and tools like loan
+and business calculators.
+
+You need an email account to sign in and use cloud sync. Calculators work
+offline on your phone and do not save numbers to the cloud.
+
+================================================================================
+2. MAIN SCREENS (4 BOTTOM TABS)
+================================================================================
+
+--------------------------------------------------------------------------------
+TAB 1 — HOME (ہوم)
+--------------------------------------------------------------------------------
+• Summary card: balance, income vs expense for selected period (Day / Week / Month)
+• Quick buttons: You Gave / You Got — open add transaction screen
+• Recent transactions list — tap receipt icon row to view receipt image
+• Period filter bar (shared with History): Day, Week, Month, or custom date range
+• Pull to refresh expenses from cloud
+
+--------------------------------------------------------------------------------
+TAB 2 — HISTORY (تاریخ)
+--------------------------------------------------------------------------------
+• Balance summary for filtered period
+• Search and sort transactions
+• Grouped by date (Today, Yesterday, etc.)
+• Tap transaction with receipt to open full image
+• Same period bar as Home
+
+--------------------------------------------------------------------------------
+TAB 3 — PEOPLE (لوگ)
+--------------------------------------------------------------------------------
+• Add people from phone contacts (with permission)
+• Each person: name, phone, credit (You Got), debit (You Gave), balance
+• Tap person → detail screen with their transactions and quick add buttons
+• People data is stored ON YOUR PHONE ONLY (not in Firestore cloud)
+
+--------------------------------------------------------------------------------
+TAB 4 — MORE (مزید)
+--------------------------------------------------------------------------------
+Tools:
+  • Loan calculators (EMI, flat rate, reducing balance)
+  • Investment calculators (SIP, fixed deposit)
+  • Business calculators (markup, break-even, profit margin)
+
+General:
+  • Categories — add/edit custom categories for You Gave & You Got
+  • Settings — language, currency, terminology, delete account
+  • Privacy Policy — in-app WebView (hosted policy page)
+  • About Us — app info
+  • Logout
+
+================================================================================
+3. FIRST-TIME USER FLOW
+================================================================================
+
+1. Splash screen — logo animation, loads session (~2 seconds)
+2. Onboarding (3 pages) — intro + choose English or Urdu
+3. Sign up or Sign in — email + password (Firebase Auth)
+4. Complete profile — name, phone (+92 Pakistan default), currency (PKR)
+5. Home screen
+
+================================================================================
+4. ADDING A TRANSACTION
+================================================================================
+
+Open via:
+  • FAB (+ Add) on Home or History
+  • Quick You Gave / You Got on Home
+  • From a person's detail screen
+
+You enter:
+  • Amount (required)
+  • Category (You Gave or You Got categories — first in list is default)
+  • Date
+  • Note (optional)
+  • Person link (optional)
+  • Receipt photo (optional — camera or gallery)
+
+When signed in:
+  • Transaction saved to Firestore (users/{uid}/expenses/{id})
+  • Receipt uploaded to Supabase → URL saved in Firestore field receiptUrl
+
+Receipt images are compressed (max ~1200px, JPEG quality 75) before upload.
+
+================================================================================
+5. PROFILE & ACCOUNT
+================================================================================
+
+Manage Account (from Home toolbar person icon):
+  • View name, email, phone
+  • Change profile photo (upload to Supabase, URL in Firestore avatarUrl)
+  • Photo compressed (max ~512px, JPEG quality 78)
+
+Settings:
+  • Time period default (day/week/month for dashboard)
+  • Currency symbol (PKR, USD, etc.)
+  • Terminology: You Gave/You Got vs other label modes
+  • Language: English / Urdu
+  • Delete account
+
+Logout (More tab):
+  • Confirmation bottom sheet
+  • Signs out Firebase + clears local session
+
+Delete account:
+  • Confirmation bottom sheet
+  • Sets isDisabled=true on Firestore profile (soft disable)
+  • Signs you out — you cannot sign in again
+  • Data may still exist on servers (see privacy policy)
+
+================================================================================
+6. CALCULATORS (NO DATA SAVED)
+================================================================================
+
+All calculator screens:
+  • Empty input fields (no pre-filled sample numbers)
+  • Tap Calculate to see results on device only
+  • Nothing sent to Firebase or Supabase
+
+Loan:
+  • EMI calculator — loan amount, annual rate %, tenure in months
+  • Flat rate loan — total interest on flat rate
+  • Reducing balance loan — EMI + interest like standard bank loan
+
+Investment:
+  • SIP — monthly investment, expected return %, years
+  • FD — deposit, rate %, months
+
+Business:
+  • Markup — cost + markup % → selling price
+  • Break-even — fixed cost, price, variable cost → units to break even
+  • Profit margin — revenue vs cost → margin %
+
+================================================================================
+7. CATEGORIES
+================================================================================
+
+• Separate lists for You Gave (expense) and You Got (income)
+• Add custom category: name + Material icon
+• Edit on tap
+• Stored locally in SharedPreferences (custom_categories_v1)
+• NOT synced to cloud in current version
+
+================================================================================
+8. DATA STORAGE — TECHNICAL MAP
+================================================================================
+
+ON YOUR DEVICE (SharedPreferences):
+  onboarding_complete, session_type, user_email, user_name, user_id,
+  profile_complete, user_phone, user_country, user_dial, user_currency,
+  user_avatar_url, locale_urdu, app_terminology, default_period,
+  custom_categories_v1, people_contacts_v1,
+  date_range_start, date_range_end
+
+GOOGLE FIREBASE:
+  • Authentication — email/password login
+  • Firestore database:
+      users/{userId}
+        - email, displayName, phone, countryCode, dialCode
+        - currency, locale, profileComplete, isDisabled, avatarUrl
+        - updatedAt, createdAt
+      users/{userId}/expenses/{expenseId}
+        - amount, categoryId, note, date, createdAt, type
+        - receiptUrl (optional), personId (optional)
+
+SUPABASE STORAGE (bucket: pocket-karcha):
+  • receipts/{userId}/{expenseId}.jpg
+  • avatars/{userId}/profile.jpg
+  • Public bucket — images accessible via public URL if someone has the link
+
+NOT IN CLOUD (device only):
+  • People/contact list
+  • Custom categories
+  • App settings (except profile fields in Firestore)
+  • Calculator inputs
+
+================================================================================
+9. PERMISSIONS — WHY THE APP ASKS
+================================================================================
+
+Android / iOS:
+  CAMERA          → Take receipt or profile photo
+  PHOTOS/GALLERY  → Pick receipt or profile image from gallery
+  CONTACTS (read) → Show contact list when adding a person
+  INTERNET        → Sign in, sync transactions, upload images
+
+The app does NOT request location, microphone, or SMS in current version.
+
+================================================================================
+10. THIRD-PARTY SERVICES
+================================================================================
+
+Used:
+  • Google Firebase (Auth + Firestore)
+  • Supabase (image storage)
+  • Google Play Services (Android, for Firebase)
+
+NOT used in current app:
+  • No ads (AdMob, etc.)
+  • Firebase Analytics — app opens, screen views, signed-in user ID (no ads)
+  • No Facebook / social login
+  • No crash reporting SDK (Sentry, Crashlytics) in pubspec
+
+================================================================================
+11. SECURITY & PRIVACY NOTES
+================================================================================
+
+• Password handled by Firebase — not stored in app code
+• Receipt/profile images compressed before upload
+• Delete Account = disable flag, not full wipe of all cloud data
+• Supabase images are in a PUBLIC bucket — treat receipt URLs as shareable links
+• Sign-in required for normal use (guest mode code exists but is not shown in UI)
+
+================================================================================
+12. LANGUAGES & TERMINOLOGY
+================================================================================
+
+• Full UI in English or Urdu (toggle in Settings)
+• Default money labels: "You Gave" (خرچ/دیا) and "You Got" (آیا/ملا) style via terminology setting
+• Currency formatting uses selected currency code (default PKR)
+• Fonts: Poppins (bundled in app)
+
+================================================================================
+13. FILES IN PROJECT (FOR DEVELOPERS)
+================================================================================
+
+Privacy policy HTML : docs/privacy_policy.html
+This explanation    : docs/APP_EXPLANATION.txt
+Supabase setup SQL  : supabase/setup_storage.sql
+Firebase config     : lib/firebase_options.dart
+Supabase config     : lib/core/constants/supabase_config.dart
+
+================================================================================
+14. CONTACT & LEGAL (UPDATE BEFORE PUBLISHING)
+================================================================================
+
+Before Play Store / App Store release, update in privacy_policy.html:
+  • [YOUR_PRIVACY_EMAIL@example.com] — your real support/privacy email
+  • Company/developer name if required by store policies
+
+About screen in app currently shows:
+  • App name, version 1.0.0
+  • Short description: expense tracker for Pakistan
+  • No privacy policy link in app yet (you can host privacy_policy.html and add link)
+
+================================================================================
+15. SUMMARY FOR USERS (SIMPLE)
+================================================================================
+
+Pocket Karcha is your personal kharcha (expense) diary:
+  ✓ Track what you spend and receive
+  ✓ Attach receipt photos
+  ✓ Track money with friends/family (People)
+  ✓ See charts and history by day/week/month
+  ✓ Use calculators without saving data
+  ✓ English + Urdu
+  ✓ Account syncs via email when online
+  ✗ Does not sell your data or show ads (current version)
+  ✗ People list stays on your phone only
+  ✗ Delete account disables login but may keep old cloud data until you request removal
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================

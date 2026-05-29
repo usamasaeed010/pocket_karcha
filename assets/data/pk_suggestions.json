@@ -1,0 +1,12 @@
+[
+  {"titleEn": "Biryani", "titleUr": "بریانی", "categoryId": "food", "amount": 450},
+  {"titleEn": "Petrol", "titleUr": "پٹرول", "categoryId": "transport", "amount": 2000},
+  {"titleEn": "Electricity bill", "titleUr": "بجلی بل", "categoryId": "utilities", "amount": 5500},
+  {"titleEn": "EasyPaisa transfer", "titleUr": "ایزی پیسہ", "categoryId": "transfer", "amount": 1000},
+  {"titleEn": "School fee", "titleUr": "سکول فیس", "categoryId": "education", "amount": 8000},
+  {"titleEn": "Vegetables (sabzi)", "titleUr": "سبزی", "categoryId": "groceries", "amount": 800},
+  {"titleEn": "Milk & bread", "titleUr": "دودھ روٹی", "categoryId": "groceries", "amount": 350},
+  {"titleEn": "Mobile recharge", "titleUr": "موبائل ریچارج", "categoryId": "utilities", "amount": 500},
+  {"titleEn": "Ride (Careem/InDrive)", "titleUr": "سواری", "categoryId": "transport", "amount": 350},
+  {"titleEn": "Medicine", "titleUr": "دوائی", "categoryId": "health", "amount": 1200}
+]
