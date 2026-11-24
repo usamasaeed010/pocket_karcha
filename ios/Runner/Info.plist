@@ -49,6 +49,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Speak sales like "1 dahi bhalla half Usama ke naam pe" and Pocket Karcha writes them in your khata.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Turns what you say into khata entries with prices from your menu.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Receipt photos for your expenses</string>
 	<key>NSPhotoLibraryUsageDescription</key>

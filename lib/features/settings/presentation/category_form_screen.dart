@@ -96,7 +96,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
-                IconData(_selectedIcon, fontFamily: 'MaterialIcons'),
+                CategoryIcons.iconForCodePoint(_selectedIcon),
                 color: selectedColor,
                 size: 36,
               ),

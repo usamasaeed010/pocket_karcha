@@ -8,7 +8,7 @@ import 'package:pocket_karcha/providers/session_provider.dart';
 class AppSettings {
   const AppSettings({
     this.urdu = false,
-    this.terminology = AppTerminology.gotGave,
+    this.terminology = AppTerminology.shop,
     this.defaultPeriod = DashboardPeriod.week,
   });
 

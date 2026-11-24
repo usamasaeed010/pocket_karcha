@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
 import 'package:pocket_karcha/core/l10n/app_strings.dart';
+import 'package:pocket_karcha/data/models/expense_model.dart';
+import 'package:pocket_karcha/features/expenses/models/transaction_type.dart';
+import 'package:pocket_karcha/features/expenses/widgets/transaction_type_theme.dart';
 import 'package:pocket_karcha/providers/history_provider.dart';
 import 'package:pocket_karcha/shared/widgets/app_bottom_sheet.dart';
 
-/// Search + sort row for History (period lives in shell header).
+/// Search + sort row and Sale / Purchase / Expense filter for History.
 class HistoryToolbar extends ConsumerStatefulWidget {
   const HistoryToolbar({super.key, required this.strings});
 
@@ -71,8 +74,11 @@ class _HistoryToolbarState extends ConsumerState<HistoryToolbar> {
     final query = ref.watch(historySearchQueryProvider);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
         children: [
           Expanded(
             child: Container(
@@ -103,7 +109,12 @@ class _HistoryToolbarState extends ConsumerState<HistoryToolbar> {
                           },
                         )
                       : null,
+                  // The Container draws the border; drop the theme's so the
+                  // box doesn't show two outlines.
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -115,6 +126,99 @@ class _HistoryToolbarState extends ConsumerState<HistoryToolbar> {
             onTap: _showSortSheet,
           ),
         ],
+          ),
+          const SizedBox(height: 10),
+          _TypeFilterChips(strings: widget.strings),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypeFilterChips extends ConsumerWidget {
+  const _TypeFilterChips({required this.strings});
+
+  final AppStrings strings;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(historyTypeFilterProvider);
+    final looks = [for (final t in TransactionType.values) lookFor(t, strings)];
+    void pick(ExpenseRecordType? type) =>
+        ref.read(historyTypeFilterProvider.notifier).state = type;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _FilterChip(
+            label: strings.all,
+            icon: Icons.apps_rounded,
+            color: AppColors.primary,
+            selected: selected == null,
+            onTap: () => pick(null),
+          ),
+          for (final look in looks) ...[
+            const SizedBox(width: 8),
+            _FilterChip(
+              label: look.title,
+              icon: look.icon,
+              color: look.color,
+              selected: selected == look.type.recordType,
+              onTap: () => pick(look.type.recordType),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? color : Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: selected ? color : AppColors.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: selected ? Colors.white : color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: selected ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
-import 'package:pocket_karcha/core/l10n/app_strings.dart';
 import 'package:pocket_karcha/shared/widgets/app_toolbar.dart';
 
 /// Radio-list settings page with unified toolbar.

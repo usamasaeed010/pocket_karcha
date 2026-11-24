@@ -6,6 +6,7 @@ import 'package:pocket_karcha/features/history/presentation/history_screen.dart'
 import 'package:pocket_karcha/features/home/presentation/dashboard_screen.dart';
 import 'package:pocket_karcha/features/more/presentation/more_screen.dart';
 import 'package:pocket_karcha/features/people/presentation/people_screen.dart';
+import 'package:pocket_karcha/features/reports/presentation/reports_screen.dart';
 import 'package:pocket_karcha/features/shell/widgets/add_transaction_sheet.dart';
 import 'package:pocket_karcha/features/shell/widgets/app_bottom_nav.dart';
 import 'package:pocket_karcha/features/shell/widgets/shell_header.dart';
@@ -28,9 +29,16 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   void _onBackInvoked() {
     final index = ref.read(mainTabIndexProvider);
 
-    if (index != 0) {
-      ref.read(mainTabIndexProvider.notifier).state = 0;
+    if (index != ShellTabs.home) {
+      ref.read(mainTabIndexProvider.notifier).state = ShellTabs.home;
       _lastBackOnHome = null;
+      return;
+    }
+
+    // Opened from the store's Settings ("Khata") → just go back there.
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
       return;
     }
 
@@ -51,7 +59,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   Widget build(BuildContext context) {
     final index = ref.watch(mainTabIndexProvider);
     final s = ref.watch(appStringsProvider);
-    final showFab = index == 0 || index == 1;
+    final showFab = index == ShellTabs.home || index == ShellTabs.history;
 
     return PopScope(
       canPop: false,
@@ -84,7 +92,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           strings: s,
           onTap: (i) {
             ref.read(mainTabIndexProvider.notifier).state = i;
-            if (i != 0) _lastBackOnHome = null;
+            if (i != ShellTabs.home) _lastBackOnHome = null;
           },
         ),
       ),
@@ -92,26 +100,22 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   }
 }
 
-/// Builds only the visible tab so Home does not mount History/More/People at once.
+/// Builds only the visible tab so Home does not mount every tab at once.
 class _TabBody extends StatelessWidget {
   const _TabBody({required this.index});
 
   final int index;
 
-  static const _tabKeys = [
-    ValueKey<String>('shell_tab_home'),
-    ValueKey<String>('shell_tab_history'),
-    ValueKey<String>('shell_tab_people'),
-    ValueKey<String>('shell_tab_more'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return switch (index) {
-      0 => DashboardScreen(key: _tabKeys[0]),
-      1 => HistoryScreen(key: _tabKeys[1]),
-      2 => PeopleScreen(key: _tabKeys[2]),
-      3 => MoreScreen(key: _tabKeys[3]),
+      ShellTabs.home => const DashboardScreen(key: ValueKey('shell_tab_home')),
+      ShellTabs.history =>
+        const HistoryScreen(key: ValueKey('shell_tab_history')),
+      ShellTabs.reports =>
+        const ReportsScreen(key: ValueKey('shell_tab_reports')),
+      ShellTabs.people => const PeopleScreen(key: ValueKey('shell_tab_people')),
+      ShellTabs.more => const MoreScreen(key: ValueKey('shell_tab_more')),
       _ => const SizedBox.shrink(),
     };
   }

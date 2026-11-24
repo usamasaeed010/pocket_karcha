@@ -1,19 +1,20 @@
 import 'dart:async';
-import 'dart:io';
+// import 'dart:io'; // Image attachments are disabled for now.
 
 import 'package:pocket_karcha/data/models/expense_model.dart';
 import 'package:pocket_karcha/services/firestore_service.dart';
-import 'package:pocket_karcha/services/storage_service.dart';
+// import 'package:pocket_karcha/services/storage_service.dart';
 
 class ExpenseRepository {
   ExpenseRepository({
     FirestoreService? firestore,
-    StorageService? storage,
-  })  : _firestore = firestore,
-        _storage = storage;
+    // Image attachments are disabled for now — receipts are not uploaded.
+    // StorageService? storage,
+  }) : _firestore = firestore;
+  // _storage = storage;
 
   final FirestoreService? _firestore;
-  final StorageService? _storage;
+  // final StorageService? _storage;
   final List<ExpenseModel> _local = [];
   final _controller = StreamController<List<ExpenseModel>>.broadcast();
 
@@ -25,34 +26,55 @@ class ExpenseRepository {
     return _controller.stream;
   }
 
-  Future<ExpenseModel> add(
-    String? uid,
-    ExpenseModel expense, {
-    File? receiptFile,
-  }) async {
+  Future<ExpenseModel> add(String? uid, ExpenseModel expense) async {
     if (_firestore != null && uid != null) {
-      var saved = expense;
-      await _firestore.addExpense(uid, saved);
+      await _firestore.addExpense(uid, expense);
 
-      if (receiptFile != null && _storage != null) {
-        final url = await _storage.uploadReceipt(
-          uid: uid,
-          expenseId: expense.id,
-          file: receiptFile,
-        );
-        saved = saved.copyWith(receiptUrl: url);
-        await _firestore.updateExpenseReceipt(uid, expense.id, url);
-      }
-      return saved;
+      // Image attachments are disabled for now.
+      // if (receiptFile != null && _storage != null) {
+      //   final url = await _storage.uploadReceipt(
+      //     uid: uid,
+      //     expenseId: expense.id,
+      //     file: receiptFile,
+      //   );
+      //   saved = saved.copyWith(receiptUrl: url);
+      //   await _firestore.updateExpenseReceipt(uid, expense.id, url);
+      // }
+      return expense;
     }
 
-    var local = expense;
-    if (receiptFile != null) {
-      local = local.copyWith(receiptUrl: receiptFile.path);
-    }
-    _local.insert(0, local);
+    // Image attachments are disabled for now.
+    // if (receiptFile != null) {
+    //   local = local.copyWith(receiptUrl: receiptFile.path);
+    // }
+    _local.insert(0, expense);
     _emitLocal();
-    return local;
+    return expense;
+  }
+
+  Future<ExpenseModel> update(String? uid, ExpenseModel expense) async {
+    if (_firestore != null && uid != null) {
+      await _firestore.updateExpense(uid, expense);
+
+      // Image attachments are disabled for now.
+      // if (receiptFile != null && _storage != null) {
+      //   final url = await _storage.uploadReceipt(
+      //     uid: uid,
+      //     expenseId: expense.id,
+      //     file: receiptFile,
+      //   );
+      //   saved = saved.copyWith(receiptUrl: url);
+      //   await _firestore.updateExpenseReceipt(uid, expense.id, url);
+      // }
+      return expense;
+    }
+
+    final index = _local.indexWhere((e) => e.id == expense.id);
+    if (index >= 0) {
+      _local[index] = expense;
+    }
+    _emitLocal();
+    return expense;
   }
 
   Future<void> delete(String? uid, String id) async {

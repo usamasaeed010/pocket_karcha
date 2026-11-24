@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
 import 'package:pocket_karcha/core/l10n/app_strings.dart';
 import 'package:pocket_karcha/data/models/expense_model.dart';
-import 'package:pocket_karcha/features/expenses/widgets/expense_list_tile.dart';
+// import 'package:pocket_karcha/features/expenses/widgets/expense_list_tile.dart'; // receipts disabled
+import 'package:pocket_karcha/features/expenses/widgets/transaction_options_sheet.dart';
 import 'package:pocket_karcha/features/history/widgets/history_balance_card.dart';
 import 'package:pocket_karcha/features/history/widgets/history_toolbar.dart';
 import 'package:pocket_karcha/features/history/widgets/history_transaction_tile.dart';
@@ -35,7 +36,7 @@ class HistoryScreen extends ConsumerWidget {
         children: [
           RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(expensesStreamProvider);
+              ref.invalidate(allEntriesStreamProvider);
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -68,18 +69,21 @@ class HistoryScreen extends ConsumerWidget {
                   )
                 else if (!showInitialLoader)
                   ..._animatedHistoryGroups(
+                    context: context,
+                    ref: ref,
                     groups: groups,
                     startIndex: 2,
                     currencyCode: currencyCode,
                     strings: s,
-                    onReceipt: (expense) {
-                      if (!expense.hasReceipt) return null;
-                      return () => showReceiptDialog(
-                            context,
-                            expense.receiptUrl!,
-                            s,
-                          );
-                    },
+                    // Image attachments are disabled for now.
+                    // onReceipt: (expense) {
+                    //   if (!expense.hasReceipt) return null;
+                    //   return () => showReceiptDialog(
+                    //         context,
+                    //         expense.receiptUrl!,
+                    //         s,
+                    //       );
+                    // },
                   ),
                 const SizedBox(height: 16),
               ],
@@ -96,11 +100,13 @@ class HistoryScreen extends ConsumerWidget {
 const _kMaxHistoryAnimations = 24;
 
 List<Widget> _animatedHistoryGroups({
+  required BuildContext context,
+  required WidgetRef ref,
   required List<({String label, List<ExpenseModel> items})> groups,
   required int startIndex,
   required String currencyCode,
   required AppStrings strings,
-  required VoidCallback? Function(ExpenseModel expense) onReceipt,
+  // required VoidCallback? Function(ExpenseModel expense) onReceipt,
 }) {
   var animIndex = startIndex;
   final widgets = <Widget>[];
@@ -133,14 +139,9 @@ List<Widget> _animatedHistoryGroups({
         margin: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.softShadow,
         ),
         child: Column(
           children: [
@@ -150,15 +151,20 @@ List<Widget> _animatedHistoryGroups({
                 HistoryTransactionTile(
                   expense: group.items[i],
                   currencyCode: currencyCode,
-                  onTap: onReceipt(group.items[i]),
+                  onOptions: () => showTransactionOptions(
+                    context,
+                    ref,
+                    group.items[i],
+                  ),
+                  // onTap: onReceipt(group.items[i]), // receipts disabled
                 ),
               ),
               if (i < group.items.length - 1)
                 const Divider(
                   height: 1,
-                  indent: 16,
+                  indent: 72,
                   endIndent: 16,
-                  color: Color(0xFFF1F5F9),
+                  color: AppColors.divider,
                 ),
             ],
           ],

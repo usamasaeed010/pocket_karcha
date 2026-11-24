@@ -14,18 +14,28 @@ final historySearchQueryProvider = StateProvider<String>((ref) => '');
 final historySortProvider =
     StateProvider<HistorySort>((ref) => HistorySort.newest);
 
+/// Entry kind shown on History; `null` means all (Sale, Purchase, Expense).
+final historyTypeFilterProvider =
+    StateProvider<ExpenseRecordType?>((ref) => null);
+
 final filteredHistoryExpensesProvider = Provider<List<ExpenseModel>>((ref) {
   final all = ref.watch(expensesStreamProvider).valueOrNull ?? [];
   final period = ref.watch(dashboardPeriodProvider);
   final query = ref.watch(historySearchQueryProvider).trim().toLowerCase();
   final sort = ref.watch(historySortProvider);
+  final type = ref.watch(historyTypeFilterProvider);
 
   var list = filterExpensesByPeriod(all, period);
+
+  if (type != null) {
+    list = list.where((e) => e.type == type).toList();
+  }
 
   if (query.isNotEmpty) {
     list = list.where((e) {
       final cat = ref.read(categoryByIdProvider(e.categoryId));
       return e.note.toLowerCase().contains(query) ||
+          (e.itemName?.toLowerCase().contains(query) ?? false) ||
           cat.labelEn.toLowerCase().contains(query) ||
           cat.labelUr.contains(query);
     }).toList();
@@ -46,25 +56,39 @@ final filteredHistoryExpensesProvider = Provider<List<ExpenseModel>>((ref) {
   return list;
 });
 
-final historyYouGaveProvider = Provider<double>((ref) {
-  return ref
-      .watch(filteredHistoryExpensesProvider)
-      .where((e) => !e.isIncome)
-      .fold<double>(0, (s, e) => s + e.amount);
-});
+double _sum(Iterable<ExpenseModel> items) =>
+    items.fold<double>(0, (s, e) => s + e.amount);
 
+/// Sales in the filtered History list.
 final historyYouGotProvider = Provider<double>((ref) {
-  return ref
-      .watch(filteredHistoryExpensesProvider)
-      .where((e) => e.isIncome)
-      .fold<double>(0, (s, e) => s + e.amount);
+  return _sum(
+    ref.watch(filteredHistoryExpensesProvider).where((e) => e.isIncome),
+  );
 });
 
+/// Stock purchases in the filtered History list.
+final historyPurchasesProvider = Provider<double>((ref) {
+  return _sum(
+    ref.watch(filteredHistoryExpensesProvider).where((e) => e.isPurchase),
+  );
+});
+
+/// Shop expenses (rent, bills, salary…) in the filtered History list.
+final historyExpensesOnlyProvider = Provider<double>((ref) {
+  return _sum(
+    ref.watch(filteredHistoryExpensesProvider).where((e) => e.isExpense),
+  );
+});
+
+/// All money out: purchases + expenses.
+final historyYouGaveProvider = Provider<double>((ref) {
+  return ref.watch(historyPurchasesProvider) +
+      ref.watch(historyExpensesOnlyProvider);
+});
+
+/// Net profit for the list: sales − purchases − expenses.
 final historyClosingBalanceProvider = Provider<double>((ref) {
-  const opening = 0.0;
-  final got = ref.watch(historyYouGotProvider);
-  final gave = ref.watch(historyYouGaveProvider);
-  return opening + got - gave;
+  return ref.watch(historyYouGotProvider) - ref.watch(historyYouGaveProvider);
 });
 
 final historyGroupedExpensesProvider =

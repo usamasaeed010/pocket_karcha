@@ -2,7 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
+import 'package:pocket_karcha/core/l10n/store_strings.dart';
 import 'package:pocket_karcha/core/navigation/app_routes.dart';
+import 'package:pocket_karcha/features/store_setup/store_gate.dart';
 import 'package:pocket_karcha/providers/locale_provider.dart';
 import 'package:pocket_karcha/providers/session_provider.dart';
 import 'package:pocket_karcha/services/firebase_service.dart';
@@ -70,56 +72,76 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _bootstrap() async {
+    var route = AppRoutes.onboarding;
     try {
-      await Future.wait<void>([
-        Future<void>.delayed(const Duration(milliseconds: 2000)),
-        _loadSession().timeout(
-          const Duration(seconds: 4),
-          onTimeout: () => debugPrint('Splash: session timeout'),
+      final results = await Future.wait<Object?>([
+        Future<void>.delayed(const Duration(milliseconds: 1600)),
+        _resolveRoute().timeout(
+          const Duration(seconds: 12),
+          onTimeout: () {
+            debugPrint('Splash: route timeout');
+            return _currentUser() == null ? AppRoutes.onboarding : AppRoutes.home;
+          },
         ),
       ]);
+      route = results[1]! as String;
     } catch (e, st) {
       debugPrint('Splash error: $e\n$st');
+      route = _currentUser() == null ? AppRoutes.onboarding : AppRoutes.home;
     }
 
     if (!mounted) return;
-    _goNext();
-  }
-
-  Future<void> _loadSession() async {
-    User? firebaseUser;
-    if (FirebaseService.isReady) {
-      try {
-        firebaseUser = FirebaseAuth.instance.currentUser;
-      } catch (e) {
-        debugPrint('Splash FirebaseAuth: $e');
-      }
-    }
-    await ref.read(sessionProvider.notifier).load(firebaseUser: firebaseUser);
-  }
-
-  void _goNext() {
-    final session = ref.read(sessionProvider);
-    final navigator = Navigator.of(context, rootNavigator: true);
-
-    late final String route;
-    if (!session.onboardingComplete) {
-      route = AppRoutes.onboarding;
-    } else if (session.canEnterHome) {
-      route = AppRoutes.home;
-    } else if (session.needsProfileSetup) {
-      route = AppRoutes.completeProfile;
-    } else {
-      route = AppRoutes.auth;
-    }
-
     debugPrint('Splash → $route');
-    navigator.pushReplacementNamed(route);
+    Navigator.of(context, rootNavigator: true).pushReplacementNamed(route);
+  }
+
+  /// Signed-in owner → their store (or setup if they have none yet);
+  /// everyone else → onboarding.
+  Future<String> _resolveRoute() async {
+    final restored = await _restoredUser();
+    try {
+      await ref
+          .read(sessionProvider.notifier)
+          .load(firebaseUser: restored)
+          .timeout(const Duration(seconds: 4));
+    } catch (e) {
+      debugPrint('Splash session: $e');
+    }
+    // load() signs out accounts that were deleted.
+    final user = _currentUser();
+    if (user == null) return AppRoutes.onboarding;
+    final hasStore = await StoreGate.hasStore(ref, user.uid);
+    return hasStore == false ? AppRoutes.storeSetup : AppRoutes.home;
+  }
+
+  /// First auth event = the user Firebase restored from disk (or null).
+  Future<User?> _restoredUser() async {
+    if (!FirebaseService.isReady) return null;
+    try {
+      return await FirebaseAuth.instance
+          .authStateChanges()
+          .first
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('Splash auth: $e');
+      return _currentUser();
+    }
+  }
+
+  User? _currentUser() {
+    if (!FirebaseService.isReady) return null;
+    try {
+      return FirebaseAuth.instance.currentUser;
+    } catch (e) {
+      debugPrint('Splash FirebaseAuth: $e');
+      return null;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(appStringsProvider);
+    final ss = ref.watch(storeStringsProvider);
 
     return Scaffold(
       body: Container(
@@ -197,7 +219,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                s.onboardingBody1,
+                                ss.obTitle1,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.7),

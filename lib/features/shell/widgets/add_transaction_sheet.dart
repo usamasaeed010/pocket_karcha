@@ -14,7 +14,7 @@ Future<void> showAddTransactionSheet(
     context: context,
     title: strings.addTransaction,
     subtitle: strings.chooseTransactionType,
-    maxHeightFraction: 0.52,
+    maxHeightFraction: 0.66,
     child: _AddTransactionPicker(strings: strings),
   );
 
@@ -34,21 +34,18 @@ class _AddTransactionPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _TypeOptionTile(
-            look: lookFor(TransactionType.gave, strings),
-            onTap: () => Navigator.pop(context, TransactionType.gave),
-          ),
-          const SizedBox(height: 12),
-          _TypeOptionTile(
-            look: lookFor(TransactionType.got, strings),
-            onTap: () => Navigator.pop(context, TransactionType.got),
-          ),
-          const SizedBox(height: 8),
+          for (final type in TransactionType.values) ...[
+            _TypeOptionTile(
+              look: lookFor(type, strings),
+              onTap: () => Navigator.pop(context, type),
+            ),
+            const SizedBox(height: 12),
+          ],
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(strings.cancel),
@@ -72,25 +69,29 @@ class _TypeOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: look.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: look.border, width: 1.5),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
-                    color: look.color,
-                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      colors: look.gradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                   child: Icon(look.icon, color: look.onColor, size: 26),
                 ),
@@ -107,7 +108,7 @@ class _TypeOptionTile extends StatelessWidget {
                           color: look.color,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         look.subtitle,
                         style: const TextStyle(

@@ -3,13 +3,218 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Signed-in user can only access their own profile and expenses.
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // ---------------------------------------------------------------
+    // Khata: a signed-in user can only access their own profile,
+    // entries (shop, personal and lena-dena), people and devices.
+    // ---------------------------------------------------------------
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
       match /expenses/{expenseId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+
+      // People in the lena-dena (who owes whom) ledger.
+      match /people/{personId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Phones that get new-order push notifications (doc id = FCM token).
+      // The Cloud Function reads them with admin access.
+      match /devices/{deviceId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // Store front. storeId == the owner's Firebase Auth uid.
+    // Anyone can read a store and its products (the public order page),
+    // only the owner can change them.
+    // ---------------------------------------------------------------
+    match /stores/{storeId} {
+
+      function isOwner() {
+        return signedIn() && request.auth.uid == storeId;
+      }
+
+      function isValidCustomer(c) {
+        return c is map
+          && c.keys().hasAll(['name', 'phone', 'address'])
+          && c.keys().hasOnly(['name', 'phone', 'address'])
+          && c.name is string && c.name.size() >= 1 && c.name.size() <= 80
+          && c.phone is string && c.phone.size() <= 20 && c.phone.matches('^[0-9]*$')
+          && c.address is string && c.address.size() <= 300;
+      }
+
+      // An order placed by a buyer from the public page. Buyers only have
+      // an anonymous sign-in, so every field is checked against the contract.
+      function isValidPublicOrder(d) {
+        return d.keys().hasAll([
+            'number', 'source', 'status', 'fulfillment', 'customer', 'items',
+            'itemCount', 'requestText', 'subtotal', 'deliveryFee', 'total',
+            'paid', 'payments', 'note', 'answers', 'amountChanged',
+            'buyerUid', 'createdAt', 'updatedAt'])
+          && d.keys().hasOnly([
+            'number', 'source', 'status', 'fulfillment', 'customer', 'items',
+            'itemCount', 'requestText', 'subtotal', 'deliveryFee', 'total',
+            'paid', 'payments', 'note', 'answers', 'amountChanged',
+            'buyerUid', 'createdAt', 'updatedAt'])
+          && d.number is string && d.number.matches('^[0-9]{6}$')
+          && d.source == 'link'
+          && d.status == 'pending'
+          && d.fulfillment in ['delivery', 'pickup']
+          && isValidCustomer(d.customer)
+          && d.items is list && d.items.size() <= 100
+          && d.itemCount is int && d.itemCount >= 0 && d.itemCount <= 100000
+          && d.requestText is string && d.requestText.size() <= 1000
+          && (d.items.size() > 0 || d.requestText.size() > 0)
+          && d.subtotal is number && d.subtotal >= 0
+          && d.deliveryFee is number && d.deliveryFee >= 0
+          && d.total is number && d.total < 100000000
+          && d.total == d.subtotal + d.deliveryFee
+          && d.paid == 0
+          && d.payments is list && d.payments.size() == 0
+          && d.note is string && d.note.size() <= 500
+          && d.answers is list && d.answers.size() <= 20
+          && d.amountChanged == false
+          && d.createdAt == request.time
+          && d.updatedAt == request.time
+          && get(/databases/$(database)/documents/stores/$(storeId)).data.isLive == true;
+      }
+
+      allow get: if true;
+      allow list: if false;
+      allow create, update, delete: if isOwner();
+
+      match /products/{productId} {
+        allow read: if true;
+        allow write: if isOwner();
+      }
+
+      match /orders/{orderId} {
+
+        // The buyer's guard as it will be once this write lands.
+        function guardAfter() {
+          return getAfter(/databases/$(database)/documents/orderGuards/$(request.auth.uid)).data;
+        }
+
+        function isBlocked(d) {
+          return exists(/databases/$(database)/documents/stores/$(storeId)/blocked/$(request.auth.uid))
+            || (d.customer.phone.size() > 0
+              && exists(/databases/$(database)/documents/stores/$(storeId)/blocked/$(d.customer.phone)));
+        }
+
+        // A public order must be written together with its guard, and its
+        // id must be "<buyer uid>_<guard seq>". So one guard update lets
+        // exactly one order through: no batches of fake orders.
+        function isGuardedBuyerOrder(d) {
+          return signedIn()
+            && d.buyerUid == request.auth.uid
+            && guardAfter().lastAt == request.time
+            && guardAfter().store == storeId
+            && orderId == request.auth.uid + '_' + string(guardAfter().seq)
+            && !isBlocked(d);
+        }
+
+        allow read, update, delete: if isOwner();
+        allow create: if isOwner()
+          || (isValidPublicOrder(request.resource.data)
+            && isGuardedBuyerOrder(request.resource.data));
+      }
+
+      // Customers the owner blocked. Doc id = phone digits (every common
+      // way of writing the number) or the buyer's uid.
+      match /blocked/{key} {
+        allow read, write: if isOwner();
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // Order guard: one doc per buyer (the order page signs buyers in
+    // anonymously). Every public order is written in the same batch as
+    // its guard, so a buyer can send one order every 30 seconds and at
+    // most 20 a day, across all shops.
+    // ---------------------------------------------------------------
+    match /orderGuards/{uid} {
+
+      function isBuyer() {
+        return signedIn() && request.auth.uid == uid;
+      }
+
+      function isValidGuard(g) {
+        return g.keys().hasAll(['seq', 'count', 'windowStart', 'lastAt', 'store'])
+          && g.keys().hasOnly(['seq', 'count', 'windowStart', 'lastAt', 'store'])
+          && g.seq is int
+          && g.count is int
+          && g.lastAt == request.time
+          && g.store is string && g.store.size() > 0 && g.store.size() <= 128;
+      }
+
+      allow get: if isBuyer();
+      allow list, delete: if false;
+      allow create: if isBuyer()
+        && isValidGuard(request.resource.data)
+        && request.resource.data.seq == 1
+        && request.resource.data.count == 1
+        && request.resource.data.windowStart == request.time;
+      allow update: if isBuyer()
+        && isValidGuard(request.resource.data)
+        && request.resource.data.seq == resource.data.seq + 1
+        && request.time > resource.data.lastAt + duration.value(30, 's')
+        && (
+          (request.time < resource.data.windowStart + duration.value(1, 'd')
+            && request.resource.data.windowStart == resource.data.windowStart
+            && request.resource.data.count == resource.data.count + 1
+            && request.resource.data.count <= 20)
+          || (request.time >= resource.data.windowStart + duration.value(1, 'd')
+            && request.resource.data.windowStart == request.time
+            && request.resource.data.count == 1)
+        );
+    }
+
+    // ---------------------------------------------------------------
+    // Link handles: /slugs/{slug} -> { storeId }.
+    // Creating an existing slug is an update, which is denied, so a
+    // handle can never be taken over.
+    // ---------------------------------------------------------------
+    match /slugs/{slug} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if signedIn()
+        && slug.matches('^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$')
+        && request.resource.data.keys().hasOnly(['storeId', 'createdAt'])
+        && request.resource.data.storeId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.storeId == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // Link counters: opens / carts / sent. The owner creates the doc;
+    // the public page may only add exactly 1 to exactly one counter.
+    // ---------------------------------------------------------------
+    match /storeStats/{storeId} {
+
+      function isStatsOwner() {
+        return signedIn() && request.auth.uid == storeId;
+      }
+
+      function isSingleBump() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        return changed.size() == 1
+          && (
+            (changed.hasOnly(['opens']) && request.resource.data.opens == resource.data.opens + 1)
+            || (changed.hasOnly(['carts']) && request.resource.data.carts == resource.data.carts + 1)
+            || (changed.hasOnly(['sent']) && request.resource.data.sent == resource.data.sent + 1)
+          );
+      }
+
+      allow read, create: if isStatsOwner();
+      allow update: if isStatsOwner() || isSingleBump();
+      allow delete: if isStatsOwner();
     }
 
     // Everything else is denied.

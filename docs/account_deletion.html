@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account &amp; Data Deletion — Pocket Karcha</title>
+  <style>
+    :root {
+      --green: #1b4332;
+      --green-light: #2d6a4f;
+      --surface: #f0f2f5;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --white: #ffffff;
+      --red: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 16px;
+    }
+    header {
+      background: linear-gradient(135deg, #0f2a1f 0%, var(--green) 50%, #163d2e 100%);
+      color: var(--white);
+      padding: 2.5rem 1.5rem 2rem;
+      text-align: center;
+    }
+    header h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.35rem; }
+    header p { opacity: 0.85; font-size: 0.95rem; }
+    .badge {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.35rem 0.85rem;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 999px;
+      font-size: 0.8rem;
+    }
+    main {
+      max-width: 720px;
+      margin: -1.5rem auto 3rem;
+      padding: 0 1rem;
+    }
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 1.75rem 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    h2 {
+      color: var(--green);
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+    h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 1.25rem 0 0.5rem;
+      color: var(--green-light);
+    }
+    p, li { margin-bottom: 0.65rem; color: var(--text); }
+    ul, ol { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+    li { margin-bottom: 0.4rem; }
+    .muted { color: var(--muted); font-size: 0.9rem; }
+    .highlight {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      margin: 0.75rem 0 1rem;
+      font-size: 0.95rem;
+    }
+    .warn {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      margin: 0.75rem 0 1rem;
+      font-size: 0.95rem;
+    }
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding-left: 2.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0.1rem;
+      width: 1.75rem;
+      height: 1.75rem;
+      background: var(--green);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin: 0.75rem 0 1rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.65rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f8fafc; font-weight: 700; }
+    a { color: var(--green-light); font-weight: 600; }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    code {
+      background: #f1f5f9;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Account &amp; Data Deletion</h1>
+  <p>Pocket Karcha · پاکٹ خرچہ</p>
+  <span class="badge">Effective: May 2026</span>
+</header>
+
+<main>
+
+  <div class="card">
+    <h2>1. About This Page</h2>
+    <p>
+      This page explains how users of <strong>Pocket Karcha</strong> can delete their account
+      and request removal of personal data. It is provided for Google Play, App Store, and
+      user transparency requirements.
+    </p>
+    <p class="muted">
+      <strong>App name:</strong> Pocket Karcha<br />
+      <strong>Android package:</strong> com.pocket.karcha.expense.manager<br />
+      <strong>Developer contact:</strong>
+      <a href="mailto:srndrddev@gmail.com">srndrddev@gmail.com</a>
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>2. Delete Account in the App (Recommended)</h2>
+    <p>You can disable your account directly inside the app:</p>
+    <ol class="steps">
+      <li>Open <strong>Pocket Karcha</strong> and sign in with your email account.</li>
+      <li>Go to the <strong>More</strong> tab (مزید).</li>
+      <li>Tap <strong>Settings</strong> (ترتیبات).</li>
+      <li>Scroll down and tap <strong>Delete Account</strong>.</li>
+      <li>Confirm in the popup — you will be signed out immediately.</li>
+    </ol>
+    <div class="highlight">
+      <strong>What happens:</strong> Your account is marked as disabled in our database.
+      You will not be able to sign in again with that account. Local data on your phone
+      (settings, people list, categories) is cleared when you sign out.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3. Request Full Data Deletion by Email</h2>
+    <p>
+      If you cannot access the app, or you want all cloud data permanently removed
+      (profile, transactions, uploaded images), email us:
+    </p>
+    <p>
+      <strong>Email:</strong>
+      <a href="mailto:srndrddev@gmail.com?subject=Pocket%20Karcha%20-%20Account%20Deletion%20Request">
+        srndrddev@gmail.com
+      </a>
+    </p>
+    <p>Please include:</p>
+    <ul>
+      <li>The email address you used to register in the app</li>
+      <li>Subject line: <code>Pocket Karcha - Account Deletion Request</code></li>
+      <li>Optional: your registered phone number (helps us verify ownership)</li>
+    </ul>
+    <p class="muted">
+      We will verify your identity and process the request within <strong>30 days</strong>.
+      You may receive a confirmation email when deletion is complete.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>4. What Data Is Deleted vs Kept</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Data type</th>
+          <th>In-app Delete Account</th>
+          <th>Full deletion (email request)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Firebase Auth account (email login)</td>
+          <td>Disabled — sign-in blocked</td>
+          <td>Permanently deleted from Firebase Auth</td>
+        </tr>
+        <tr>
+          <td>Profile (name, phone, currency)</td>
+          <td>Account disabled flag set</td>
+          <td>Deleted from Firestore</td>
+        </tr>
+        <tr>
+          <td>Transactions / expenses</td>
+          <td>May remain on server until full deletion</td>
+          <td>Deleted from Firestore</td>
+        </tr>
+        <tr>
+          <td>Receipt &amp; profile photos (Supabase)</td>
+          <td>May remain until full deletion</td>
+          <td>Deleted from storage</td>
+        </tr>
+        <tr>
+          <td>People, categories, app settings</td>
+          <td>Removed from your device on sign-out</td>
+          <td>Already on device only — not in cloud</td>
+        </tr>
+        <tr>
+          <td>Firebase Analytics (usage stats)</td>
+          <td>Not linked after sign-out</td>
+          <td>Anonymized per Google’s retention policy</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>5. Data Retention</h2>
+    <p>
+      After you use <strong>Delete Account</strong> in the app, some server data may remain
+      for a short period until we process permanent deletion. Backup copies on Google Firebase
+      or Supabase may take up to <strong>30 days</strong> to be fully purged from systems.
+    </p>
+    <div class="warn">
+      <strong>Important:</strong> Deletion is permanent. You cannot recover your account or
+      transaction history after full data deletion is processed.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>6. Related Links</h2>
+    <ul>
+      <li><a href="index.html">Privacy Policy</a></li>
+      <li><a href="mailto:srndrddev@gmail.com">Contact developer</a></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>7. اردو — اکاؤنٹ حذف کریں</h2>
+    <p>
+      ایپ میں: <strong>مزید → ترتیبات → Delete Account</strong> پر جائیں اور تصدیق کریں۔
+      مکمل ڈیٹا حذف کے لیے <a href="mailto:srndrddev@gmail.com">srndrddev@gmail.com</a>
+      پر ای میل بھیجیں — رجسٹرڈ ای میل لازمی لکھیں۔
+    </p>
+  </div>
+
+</main>
+
+<footer>
+  © Pocket Karcha · Account Deletion · Version 1.0.0
+</footer>
+
+</body>
+</html>

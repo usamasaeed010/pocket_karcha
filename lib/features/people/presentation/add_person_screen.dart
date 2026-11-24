@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
 import 'package:pocket_karcha/core/constants/app_spacing.dart';
 import 'package:pocket_karcha/data/models/person_model.dart';
+import 'package:pocket_karcha/features/people/presentation/person_detail_screen.dart';
 import 'package:pocket_karcha/features/people/widgets/person_phone_field.dart';
 import 'package:pocket_karcha/providers/locale_provider.dart';
 import 'package:pocket_karcha/providers/people_provider.dart';
@@ -37,7 +40,6 @@ class _AddPersonScreenState extends ConsumerState<AddPersonScreen> {
   late final TextEditingController _phone;
   late String _countryCode;
   late String _dialCode;
-  bool _saving = false;
 
   @override
   void initState() {
@@ -55,7 +57,7 @@ class _AddPersonScreenState extends ConsumerState<AddPersonScreen> {
     super.dispose();
   }
 
-  Future<void> _save() async {
+  void _save() {
     final s = ref.read(appStringsProvider);
     final name = _name.text.trim();
     if (name.isEmpty) {
@@ -63,27 +65,36 @@ class _AddPersonScreenState extends ConsumerState<AddPersonScreen> {
       return;
     }
 
-    setState(() => _saving = true);
-    try {
-      await ref.read(peopleActionsProvider).add(
-            PersonModel(
-              id: widget.contactId,
-              name: name,
-              countryCode: _countryCode,
-              dialCode: _dialCode,
-              phoneLocal: _phone.text.trim(),
-            ),
-          );
-      if (mounted) {
-        context.showSuccessSnack(s.snackPersonAdded);
-        Navigator.of(context).pop();
-        Navigator.of(context).pop();
-      }
-    } catch (_) {
-      if (mounted) context.showErrorSnack(s.snackSomethingWrong);
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
+    final person = PersonModel(
+      id: widget.contactId,
+      name: name,
+      countryCode: _countryCode,
+      dialCode: _dialCode,
+      phoneLocal: _phone.text
+          .replaceAll(RegExp(r'\D'), '')
+          .replaceFirst(RegExp(r'^0+'), ''),
+    );
+    // Firestore shows the person at once (even offline) and syncs later,
+    // so the screen does not wait for the server.
+    unawaited(
+      ref.read(peopleActionsProvider).add(person).catchError((Object _) {
+        showRootSnack(
+          message: s.snackSomethingWrong,
+          type: AppSnackType.error,
+        );
+      }),
+    );
+    context.showSuccessSnack(s.snackPersonAdded);
+    // Close this screen and the contact list, then open the person's
+    // lena-dena so the first entry is one tap away.
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    navigator.pop();
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => PersonDetailScreen(personId: person.id),
+      ),
+    );
   }
 
   @override
@@ -122,8 +133,7 @@ class _AddPersonScreenState extends ConsumerState<AddPersonScreen> {
           const SizedBox(height: AppSpacing.xl),
           AppButton(
             label: s.addPeople,
-            loading: _saving,
-            onPressed: _saving ? null : _save,
+            onPressed: _save,
           ),
         ],
       ),

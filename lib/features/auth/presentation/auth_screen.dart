@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
 import 'package:pocket_karcha/core/constants/app_spacing.dart';
 import 'package:pocket_karcha/core/l10n/app_strings.dart';
-import 'package:pocket_karcha/core/navigation/app_navigator.dart';
-import 'package:pocket_karcha/core/navigation/app_routes.dart';
+import 'package:pocket_karcha/core/l10n/store_strings.dart';
+import 'package:pocket_karcha/core/theme/app_fonts.dart';
 import 'package:pocket_karcha/features/auth/providers/auth_form_provider.dart';
+import 'package:pocket_karcha/features/store_setup/store_gate.dart';
 import 'package:pocket_karcha/providers/locale_provider.dart';
 import 'package:pocket_karcha/services/firebase_service.dart';
 import 'package:pocket_karcha/shared/widgets/app_button.dart';
@@ -13,8 +14,12 @@ import 'package:pocket_karcha/shared/widgets/app_password_field.dart';
 import 'package:pocket_karcha/shared/widgets/app_snackbar.dart';
 import 'package:pocket_karcha/shared/widgets/app_text_field.dart';
 
+/// Email sign-in ("I already have a store") or sign-up (fallback when the
+/// guest quick start is switched off).
 class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({super.key});
+  const AuthScreen({super.key, this.startInSignUp = false});
+
+  final bool startInSignUp;
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
@@ -33,6 +38,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     _password = TextEditingController();
     _confirm = TextEditingController();
     _name = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(authFormProvider.notifier)
+          .setMode(widget.startInSignUp ? AuthMode.register : AuthMode.signIn);
+    });
   }
 
   @override
@@ -75,11 +86,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Future<void> _submit() async {
     final s = ref.read(appStringsProvider);
     final form = ref.read(authFormProvider);
-    final result = await ref.read(authFormProvider.notifier).submit(
+    final result = await ref
+        .read(authFormProvider.notifier)
+        .submit(
           email: _email.text,
           password: _password.text,
-          confirmPassword:
-              form.mode == AuthMode.register ? _confirm.text : null,
+          confirmPassword: form.mode == AuthMode.register
+              ? _confirm.text
+              : null,
           name: form.mode == AuthMode.register ? _name.text : null,
         );
 
@@ -93,150 +107,152 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       return;
     }
 
-    if (result.needsProfileSetup) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.completeProfile);
-    } else {
-      AppNavigator.toHome(context);
-    }
+    // Signed in: open the store, or set one up if this account has none.
+    await StoreGate.go(context, ref, result.user!.uid);
   }
 
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(appStringsProvider);
+    final ss = ref.watch(storeStringsProvider);
     final form = ref.watch(authFormProvider);
     final isRegister = form.mode == AuthMode.register;
     final firebaseReady = FirebaseService.isReady;
+    final canPop = Navigator.of(context).canPop();
 
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppSpacing.xl),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      size: 48,
-                      color: AppColors.primary,
-                    ),
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: canPop
+          ? AppBar(backgroundColor: AppColors.cream, elevation: 0)
+          : null,
+      body: SafeArea(
+        top: !canPop,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: canPop ? AppSpacing.sm : AppSpacing.xl),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: AppColors.brandSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.storefront_rounded,
+                    size: 44,
+                    color: AppColors.brand,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  isRegister ? s.createAccountTitle : s.welcomeBack,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                isRegister ? ss.signUpTitle : ss.signInTitle,
+                textAlign: TextAlign.center,
+                style: AppFonts.display(size: 26),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                isRegister ? ss.signUpSub : ss.signInSub,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  height: 1.4,
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  s.loginHint,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-                if (!firebaseReady) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.shade200),
-                    ),
-                    child: Text(
-                      s.firebaseNotReady,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.orange.shade900,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.xl),
+              ),
+              if (!firebaseReady) ...[
+                const SizedBox(height: AppSpacing.md),
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(14),
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade200),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _AuthTab(
-                          label: s.signIn,
-                          selected: !isRegister,
-                          onTap: () => ref
-                              .read(authFormProvider.notifier)
-                              .setMode(AuthMode.signIn),
-                        ),
-                      ),
-                      Expanded(
-                        child: _AuthTab(
-                          label: s.signUp,
-                          selected: isRegister,
-                          onTap: () => ref
-                              .read(authFormProvider.notifier)
-                              .setMode(AuthMode.register),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    s.firebaseNotReady,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.orange.shade900,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
-                if (isRegister) ...[
-                  AppTextField(
-                    controller: _name,
-                    label: s.name,
-                    prefixIcon: Icons.person_outline_rounded,
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
+              ],
+              const SizedBox(height: AppSpacing.xl),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _AuthTab(
+                        label: s.signIn,
+                        selected: !isRegister,
+                        onTap: () => ref
+                            .read(authFormProvider.notifier)
+                            .setMode(AuthMode.signIn),
+                      ),
+                    ),
+                    Expanded(
+                      child: _AuthTab(
+                        label: s.signUp,
+                        selected: isRegister,
+                        onTap: () => ref
+                            .read(authFormProvider.notifier)
+                            .setMode(AuthMode.register),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              if (isRegister) ...[
                 AppTextField(
-                  controller: _email,
-                  label: s.email,
-                  prefixIcon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  autocorrect: false,
+                  controller: _name,
+                  label: s.name,
+                  prefixIcon: Icons.person_outline_rounded,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                AppPasswordField(
-                  controller: _password,
-                  label: s.password,
-                  textInputAction: isRegister
-                      ? TextInputAction.next
-                      : TextInputAction.done,
-                ),
-                if (isRegister) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  AppPasswordField(
-                    controller: _confirm,
-                    label: s.confirmPassword,
-                    textInputAction: TextInputAction.done,
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.xl),
-                AppButton(
-                  label: isRegister ? s.signUp : s.signIn,
-                  loading: form.loading,
-                  onPressed: firebaseReady ? _submit : null,
-                ),
-                const SizedBox(height: AppSpacing.xl),
               ],
-            ),
+              AppTextField(
+                controller: _email,
+                label: s.email,
+                prefixIcon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              AppPasswordField(
+                controller: _password,
+                label: s.password,
+                textInputAction: isRegister
+                    ? TextInputAction.next
+                    : TextInputAction.done,
+              ),
+              if (isRegister) ...[
+                const SizedBox(height: AppSpacing.md),
+                AppPasswordField(
+                  controller: _confirm,
+                  label: s.confirmPassword,
+                  textInputAction: TextInputAction.done,
+                ),
+              ],
+              const SizedBox(height: AppSpacing.xl),
+              AppButton(
+                label: isRegister ? s.signUp : s.signIn,
+                loading: form.loading,
+                onPressed: firebaseReady ? _submit : null,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+            ],
           ),
         ),
       ),

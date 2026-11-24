@@ -16,14 +16,23 @@ final allCategoriesProvider = Provider<List<CategoryModel>>((ref) {
   return ref.watch(categoriesRepositoryProvider).loadAll();
 });
 
-final gaveCategoriesProvider = Provider<List<CategoryModel>>((ref) {
+/// Categories for one entry kind (expense / sale / stock purchase).
+final categoriesForScopeProvider =
+    Provider.family<List<CategoryModel>, CategoryScope>((ref, scope) {
   ref.watch(categoriesRefreshProvider);
-  return ref.watch(categoriesRepositoryProvider).forScope(CategoryScope.gave);
+  return ref.watch(categoriesRepositoryProvider).forScope(scope);
+});
+
+final gaveCategoriesProvider = Provider<List<CategoryModel>>((ref) {
+  return ref.watch(categoriesForScopeProvider(CategoryScope.gave));
 });
 
 final gotCategoriesProvider = Provider<List<CategoryModel>>((ref) {
-  ref.watch(categoriesRefreshProvider);
-  return ref.watch(categoriesRepositoryProvider).forScope(CategoryScope.got);
+  return ref.watch(categoriesForScopeProvider(CategoryScope.got));
+});
+
+final stockCategoriesProvider = Provider<List<CategoryModel>>((ref) {
+  return ref.watch(categoriesForScopeProvider(CategoryScope.stock));
 });
 
 final categoryByIdProvider = Provider.family<CategoryModel, String>((ref, id) {
@@ -34,9 +43,9 @@ final categoryByIdProvider = Provider.family<CategoryModel, String>((ref, id) {
 final defaultCategoryIdProvider =
     Provider.family<String?, TransactionType>((ref, type) {
   ref.watch(categoriesRefreshProvider);
-  final repo = ref.watch(categoriesRepositoryProvider);
-  final scope = type == TransactionType.got ? CategoryScope.got : CategoryScope.gave;
-  return repo.firstIdForScope(scope);
+  return ref
+      .watch(categoriesRepositoryProvider)
+      .firstIdForScope(type.categoryScope);
 });
 
 final categoryActionsProvider = Provider<CategoryActions>((ref) {

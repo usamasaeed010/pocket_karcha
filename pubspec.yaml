@@ -1,7 +1,7 @@
 name: pocket_karcha
 description: Personal expense tracker for Pakistan — Urdu/English, Firebase, Riverpod.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.11.5
@@ -28,6 +28,8 @@ dependencies:
   fl_chart: ^0.70.2
   intl: ^0.20.2
   image_picker: ^1.1.2
+  image_picker_android: ^0.8.13+13
+  image_picker_platform_interface: ^2.11.0
   flutter_image_compress: ^2.4.0
   path: ^1.9.1
   shared_preferences: ^2.5.3
@@ -35,6 +37,15 @@ dependencies:
   flutter_contacts: ^2.1.0
   permission_handler: ^12.0.2
   webview_flutter: ^4.13.0
+  url_launcher: ^6.3.3
+  share_plus: ^13.3.1
+  qr_flutter: ^4.1.0
+  path_provider: ^2.1.6
+  firebase_messaging: ^15.2.10
+  speech_to_text: ^7.4.0
+  firebase_app_check: ^0.3.2+10
+  pdf: ^3.12.0
+  excel: ^4.0.6
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +71,9 @@ flutter:
   assets:
     - assets/data/
     - assets/images/
+    # Urdu font for exported PDF reports (not used by the app UI).
+    - assets/fonts/NotoNaskhArabic-Regular.ttf
+    - assets/fonts/NotoNaskhArabic-LICENSE.txt
   fonts:
     - family: Poppins
       fonts:

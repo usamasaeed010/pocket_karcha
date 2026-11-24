@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pocket_karcha/core/constants/app_colors.dart';
 import 'package:pocket_karcha/features/calculators/presentation/fd_calculator_screen.dart';
 import 'package:pocket_karcha/features/calculators/presentation/sip_calculator_screen.dart';
 import 'package:pocket_karcha/features/settings/widgets/menu_tile.dart';

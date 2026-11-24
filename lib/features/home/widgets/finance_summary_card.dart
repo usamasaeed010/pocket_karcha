@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
-import 'package:pocket_karcha/core/constants/app_spacing.dart';
 import 'package:pocket_karcha/core/l10n/app_strings.dart';
 import 'package:pocket_karcha/core/utils/currency_formatter.dart';
-import 'package:pocket_karcha/providers/auth_provider.dart';
 import 'package:pocket_karcha/features/expenses/models/transaction_type.dart';
 import 'package:pocket_karcha/features/expenses/widgets/transaction_type_theme.dart';
+import 'package:pocket_karcha/providers/auth_provider.dart';
 import 'package:pocket_karcha/providers/dashboard_provider.dart';
 
+/// Gradient hero card: profit / loss for the selected period plus
+/// Sale · Purchase · Expense totals.
 class FinanceSummaryCard extends ConsumerWidget {
   const FinanceSummaryCard({super.key, required this.strings});
 
@@ -16,122 +17,179 @@ class FinanceSummaryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = strings;
     final currencyCode = ref.watch(selectedCurrencyProvider);
     final period = ref.watch(dashboardPeriodProvider);
-    final spent = ref.watch(periodTotalProvider);
-    final income = ref.watch(periodIncomeProvider);
-    final balance = ref.watch(periodBalanceProvider);
-    final budgetUsage = ref.watch(budgetUsageProvider);
+    final sales = ref.watch(periodSalesProvider);
+    final purchases = ref.watch(periodPurchasesProvider);
+    final expenses = ref.watch(periodExpensesOnlyProvider);
+    final profit = ref.watch(periodProfitProvider);
+    final isLoss = profit < 0;
+    final margin = sales > 0 ? (profit / sales * 100).round() : null;
+    final colors = isLoss ? AppColors.lossGradient : AppColors.heroGradient;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+            color: colors.first.withValues(alpha: 0.35),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Text(
-            strings.periodSummaryTitle(period).toUpperCase(),
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
-              letterSpacing: 1.1,
-              color: AppColors.textSecondary,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -40,
+              top: -50,
+              child: _Bubble(size: 160, opacity: 0.08),
             ),
-          ),
-          const SizedBox(height: 12),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              CurrencyFormatter.format(balance, currencyCode: currencyCode),
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 32,
-                color: balance >= 0
-                    ? AppColors.textPrimary
-                    : AppColors.expense,
-              ),
+            Positioned(
+              right: 40,
+              bottom: -70,
+              child: _Bubble(size: 140, opacity: 0.06),
             ),
-          ),
-          Text(
-            strings.balance,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: _StatPill(
-                  look: lookFor(TransactionType.got, strings),
-                  amount: income,
-                  currencyCode: currencyCode,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatPill(
-                  look: lookFor(TransactionType.gave, strings),
-                  amount: spent,
-                  currencyCode: currencyCode,
-                ),
-              ),
-            ],
-          ),
-          if (period == DashboardPeriod.month && budgetUsage > 0) ...[
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                Text(
-                  strings.spent,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isLoss
+                                  ? Icons.trending_down_rounded
+                                  : Icons.trending_up_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              s.periodResultTitle(period, loss: isLoss),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      if (margin != null)
+                        Text(
+                          s.marginLabel('$margin'),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  '${budgetUsage.toStringAsFixed(0)}%',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.spentBar,
+                  const SizedBox(height: 14),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      '${isLoss ? '-' : ''}${CurrencyFormatter.format(profit.abs(), currencyCode: currencyCode)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 34,
+                        height: 1.1,
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: (budgetUsage / 100).clamp(0.0, 1.0),
-                minHeight: 6,
-                backgroundColor: const Color(0xFFF1F5F9),
-                color: AppColors.spentBar,
+                  const SizedBox(height: 4),
+                  Text(
+                    '${s.youGot} − ${s.purchase} − ${s.youGave}',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _HeroStat(
+                          look: lookFor(TransactionType.got, s),
+                          amount: sales,
+                          currencyCode: currencyCode,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _HeroStat(
+                          look: lookFor(TransactionType.purchase, s),
+                          amount: purchases,
+                          currencyCode: currencyCode,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _HeroStat(
+                          look: lookFor(TransactionType.gave, s),
+                          amount: expenses,
+                          currencyCode: currencyCode,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
-class _StatPill extends StatelessWidget {
-  const _StatPill({
+class _Bubble extends StatelessWidget {
+  const _Bubble({required this.size, required this.opacity});
+
+  final double size;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: opacity),
+      ),
+    );
+  }
+}
+
+class _HeroStat extends StatelessWidget {
+  const _HeroStat({
     required this.look,
     required this.amount,
     required this.currencyCode,
@@ -144,11 +202,11 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
       decoration: BoxDecoration(
-        color: look.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: look.border),
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,50 +214,40 @@ class _StatPill extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: look.color,
+                width: 22,
+                height: 22,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(look.icon, size: 16, color: look.onColor),
+                child: Icon(look.icon, size: 13, color: look.color),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      look.title,
-                      style: TextStyle(
-                        color: look.color,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      look.subtitle,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                child: Text(
+                  look.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11.5,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            CurrencyFormatter.format(amount, currencyCode: currencyCode),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: look.color,
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              CurrencyFormatter.format(amount, currencyCode: currencyCode),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
             ),
           ),
         ],

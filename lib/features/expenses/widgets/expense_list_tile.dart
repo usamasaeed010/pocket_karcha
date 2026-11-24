@@ -1,8 +1,8 @@
-import 'dart:io';
+// import 'dart:io'; // Image attachments are disabled for now.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pocket_karcha/core/l10n/app_strings.dart';
+// import 'package:pocket_karcha/core/l10n/app_strings.dart';
 import 'package:pocket_karcha/core/utils/currency_formatter.dart';
 import 'package:pocket_karcha/core/utils/date_utils.dart';
 import 'package:pocket_karcha/data/models/expense_model.dart';
@@ -15,18 +15,19 @@ class ExpenseListTile extends ConsumerWidget {
     required this.expense,
     required this.onDelete,
     this.currencyCode = 'PKR',
-    this.onViewReceipt,
+    // Image attachments are disabled for now.
+    // this.onViewReceipt,
   });
 
   final ExpenseModel expense;
   final String currencyCode;
   final VoidCallback onDelete;
-  final VoidCallback? onViewReceipt;
+  // final VoidCallback? onViewReceipt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final urdu = ref.watch(localeUrduProvider);
-    final s = ref.watch(appStringsProvider);
+    // final s = ref.watch(appStringsProvider);
     final cat = ref.watch(categoryByIdProvider(expense.categoryId));
 
     return Card(
@@ -45,12 +46,13 @@ class ExpenseListTile extends ConsumerWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (expense.hasReceipt && onViewReceipt != null)
-              IconButton(
-                icon: const Icon(Icons.receipt_long, size: 22),
-                tooltip: s.viewReceipt,
-                onPressed: onViewReceipt,
-              ),
+            // Image attachments are disabled for now.
+            // if (expense.hasReceipt && onViewReceipt != null)
+            //   IconButton(
+            //     icon: const Icon(Icons.receipt_long, size: 22),
+            //     tooltip: s.viewReceipt,
+            //     onPressed: onViewReceipt,
+            //   ),
             Text(
               CurrencyFormatter.format(
                 expense.amount,
@@ -72,43 +74,44 @@ class ExpenseListTile extends ConsumerWidget {
   }
 }
 
-void showReceiptDialog(BuildContext context, String url, AppStrings s) {
-  showDialog<void>(
-    context: context,
-    builder: (ctx) {
-      final maxH = MediaQuery.sizeOf(ctx).height * 0.65;
-      return Dialog(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      s.viewReceipt,
-                      style: Theme.of(ctx).textTheme.titleMedium,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: maxH),
-                child: InteractiveViewer(
-                  child: url.startsWith('http')
-                      ? Image.network(url, fit: BoxFit.contain)
-                      : Image.file(File(url), fit: BoxFit.contain),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
+// Image attachments are disabled for now.
+// void showReceiptDialog(BuildContext context, String url, AppStrings s) {
+//   showDialog<void>(
+//     context: context,
+//     builder: (ctx) {
+//       final maxH = MediaQuery.sizeOf(ctx).height * 0.65;
+//       return Dialog(
+//         child: Padding(
+//           padding: const EdgeInsets.all(12),
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               Row(
+//                 children: [
+//                   Expanded(
+//                     child: Text(
+//                       s.viewReceipt,
+//                       style: Theme.of(ctx).textTheme.titleMedium,
+//                     ),
+//                   ),
+//                   IconButton(
+//                     icon: const Icon(Icons.close),
+//                     onPressed: () => Navigator.pop(ctx),
+//                   ),
+//                 ],
+//               ),
+//               ConstrainedBox(
+//                 constraints: BoxConstraints(maxHeight: maxH),
+//                 child: InteractiveViewer(
+//                   child: url.startsWith('http')
+//                       ? Image.network(url, fit: BoxFit.contain)
+//                       : Image.file(File(url), fit: BoxFit.contain),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       );
+//     },
+//   );
+// }

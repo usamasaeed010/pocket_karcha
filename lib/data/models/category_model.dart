@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:pocket_karcha/core/constants/category_icons.dart';
 import 'package:pocket_karcha/data/models/expense_model.dart';
 
-/// Maps to expense (You Gave) vs income (You Got) categories.
+/// Which kind of entry a category belongs to.
+///
+/// * [gave] — shop expenses (rent, bills, salary…).
+/// * [got] — sales / money in.
+/// * [stock] — stock & raw-material purchases (fruit, buns, milk…).
 enum CategoryScope {
   gave,
-  got;
+  got,
+  stock;
 
   bool get isIncome => this == CategoryScope.got;
 
-  static CategoryScope fromRecordType(ExpenseRecordType type) =>
-      type == ExpenseRecordType.income ? CategoryScope.got : CategoryScope.gave;
+  static CategoryScope fromRecordType(ExpenseRecordType type) => switch (type) {
+        ExpenseRecordType.income => CategoryScope.got,
+        ExpenseRecordType.purchase => CategoryScope.stock,
+        ExpenseRecordType.expense => CategoryScope.gave,
+      };
 }
 
 class CategoryModel {
@@ -31,7 +40,7 @@ class CategoryModel {
   final CategoryScope scope;
   final bool isCustom;
 
-  IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
+  IconData get icon => CategoryIcons.iconForCodePoint(iconCodePoint);
   Color get color => Color(colorValue);
 
   String label(bool urdu) => urdu ? labelUr : labelEn;

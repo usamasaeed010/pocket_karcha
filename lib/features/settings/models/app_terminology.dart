@@ -1,4 +1,8 @@
+/// Labels used for money in / money out entries.
+///
+/// Purchases (stock) are always called "Purchase" / "خریداری".
 enum AppTerminology {
+  shop,
   gotGave,
   creditDebit,
   cashInOut,
@@ -9,12 +13,14 @@ enum AppTerminology {
   static AppTerminology fromKey(String? key) {
     return AppTerminology.values.firstWhere(
       (e) => e.name == key,
-      orElse: () => AppTerminology.gotGave,
+      orElse: () => AppTerminology.shop,
     );
   }
 
   String label(bool urdu) {
     switch (this) {
+      case AppTerminology.shop:
+        return urdu ? 'فروخت - خرچہ' : 'Sale - Expense';
       case AppTerminology.gotGave:
         return urdu ? 'ملے - دیے' : 'Got - Gave';
       case AppTerminology.creditDebit:
@@ -28,6 +34,11 @@ enum AppTerminology {
 
   ({String positive, String negative}) pair(bool urdu) {
     switch (this) {
+      case AppTerminology.shop:
+        return (
+          positive: urdu ? 'فروخت' : 'Sale',
+          negative: urdu ? 'خرچہ' : 'Expense',
+        );
       case AppTerminology.gotGave:
         return (
           positive: urdu ? 'آمدنی' : 'You Got',

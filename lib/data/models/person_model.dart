@@ -58,16 +58,28 @@ class PersonModel {
   }
 }
 
+/// Lena-dena totals with one person.
 class PersonLedger {
   const PersonLedger({
-    this.credit = 0,
-    this.debit = 0,
+    this.gave = 0,
+    this.got = 0,
+    this.entries = 0,
+    this.lastActivity,
   });
 
-  final double credit;
-  final double debit;
+  /// Money (or goods on credit) you gave them.
+  final double gave;
 
-  double get balance => credit - debit;
+  /// Money they gave you (paid back, advance, payment).
+  final double got;
 
-  bool get hasActivity => credit > 0 || debit > 0;
+  final int entries;
+  final DateTime? lastActivity;
+
+  /// Positive: they will give you (lena hai).
+  /// Negative: you will give them (dena hai).
+  double get net => gave - got;
+
+  bool get hasActivity => entries > 0;
+  bool get isSettled => net.abs() < 0.005;
 }

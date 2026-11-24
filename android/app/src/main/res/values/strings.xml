@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="order_channel_name">New orders</string>
+    <string name="order_channel_description">A ring when a customer orders from your store link</string>
+</resources>

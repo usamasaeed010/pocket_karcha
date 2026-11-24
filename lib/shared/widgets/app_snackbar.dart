@@ -3,6 +3,21 @@ import 'package:pocket_karcha/core/constants/app_colors.dart';
 
 enum AppSnackType { success, error, info, warning }
 
+/// App-wide messenger (set on MaterialApp) so background work can show snacks.
+final rootMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+/// Snack without a BuildContext — e.g. when a background write fails.
+void showRootSnack({
+  required String message,
+  AppSnackType type = AppSnackType.info,
+  Duration duration = const Duration(seconds: 3),
+  SnackBarAction? action,
+}) {
+  final messenger = rootMessengerKey.currentState;
+  if (messenger == null) return;
+  _show(messenger, message: message, type: type, duration: duration, action: action);
+}
+
 /// Shows a styled floating snackbar for success, error, info, or warning.
 void showAppSnackBar(
   BuildContext context, {
@@ -12,6 +27,38 @@ void showAppSnackBar(
 }) {
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;
+  _show(messenger, message: message, type: type, duration: duration);
+}
+
+void _show(
+  ScaffoldMessengerState messenger, {
+  required String message,
+  required AppSnackType type,
+  required Duration duration,
+  SnackBarAction? action,
+}) {
+  if (action != null) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          backgroundColor: AppColors.ink,
+          duration: duration,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          content: Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          action: action,
+        ),
+      );
+    return;
+  }
 
   messenger
     ..hideCurrentSnackBar()

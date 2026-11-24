@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pocket_karcha/data/models/auth_result.dart';
 import 'package:pocket_karcha/services/auth_service.dart';
+import 'package:pocket_karcha/services/push_service.dart';
 import 'package:pocket_karcha/services/user_profile_service.dart';
 
 class AuthRepository {
@@ -89,7 +90,17 @@ class AuthRepository {
     }
   }
 
-  Future<void> signOut() => _auth?.signOut() ?? Future.value();
+  Future<void> signOut() async {
+    final uid = _auth?.currentUser?.uid;
+    if (uid != null) {
+      // Stop new-order alerts on this phone while still signed in. Waits a
+      // few seconds at most so logging out offline is not blocked.
+      await PushService.instance
+          .unregisterDevice(uid)
+          .timeout(const Duration(seconds: 4), onTimeout: () {});
+    }
+    await _auth?.signOut();
+  }
 
   String _mapCode(FirebaseAuthException e) {
     switch (e.code) {

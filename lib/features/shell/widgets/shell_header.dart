@@ -20,7 +20,7 @@ class ShellHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tab = ref.watch(mainTabIndexProvider);
     final s = ref.watch(appStringsProvider);
-    final showPeriod = tab == 0 || tab == 1;
+    final showPeriod = tab == ShellTabs.home || tab == ShellTabs.history;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -52,20 +52,20 @@ class _ShellAppBar extends ConsumerWidget {
         'User';
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
 
+    void openEditProfile() {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const ManageAccountScreen(),
+        ),
+      );
+    }
+
     switch (tab) {
-      case 0:
-        final balance =
-            ref.watch(periodIncomeProvider) - ref.watch(periodTotalProvider);
+      case ShellTabs.home:
+        final profit = ref.watch(periodProfitProvider);
         final currency = ref.watch(selectedCurrencyProvider);
-        final balanceText =
-            CurrencyFormatter.format(balance, currencyCode: currency);
-        void openEditProfile() {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const ManageAccountScreen(),
-            ),
-          );
-        }
+        final amount =
+            CurrencyFormatter.format(profit.abs(), currencyCode: currency);
 
         return AppToolbarBar(
           leading: GestureDetector(
@@ -76,7 +76,9 @@ class _ShellAppBar extends ConsumerWidget {
             ),
           ),
           title: strings.greeting(name),
-          subtitle: balanceText,
+          subtitle: profit < 0
+              ? strings.lossShort(amount)
+              : strings.profitShort(amount),
           actions: [
             AppToolbarIconAction(
               icon: Icons.edit_outlined,
@@ -84,7 +86,7 @@ class _ShellAppBar extends ConsumerWidget {
             ),
           ],
         );
-      case 1:
+      case ShellTabs.history:
         final count = ref.watch(filteredHistoryExpensesProvider).length;
         return AppToolbarBar(
           title: strings.history,
@@ -94,7 +96,13 @@ class _ShellAppBar extends ConsumerWidget {
           ),
           largeTitle: true,
         );
-      case 2:
+      case ShellTabs.reports:
+        return AppToolbarBar(
+          title: strings.reports,
+          subtitle: strings.reportsDesc,
+          largeTitle: true,
+        );
+      case ShellTabs.people:
         final peopleCount = ref.watch(peopleListProvider).length;
         return AppToolbarBar(
           title: strings.people,
@@ -103,7 +111,7 @@ class _ShellAppBar extends ConsumerWidget {
               : strings.peopleCount(peopleCount),
           largeTitle: true,
         );
-      case 3:
+      case ShellTabs.more:
         return AppToolbarBar(
           title: strings.more,
           subtitle: strings.toolsAndCategories,
@@ -111,11 +119,7 @@ class _ShellAppBar extends ConsumerWidget {
           actions: [
             AppToolbarIconAction(
               icon: Icons.edit_outlined,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const ManageAccountScreen(),
-                ),
-              ),
+              onPressed: openEditProfile,
             ),
           ],
         );

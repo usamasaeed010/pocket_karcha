@@ -43,13 +43,20 @@ class FirestoreService {
     await _expenses(uid).doc(expense.id).set(expense.toMap());
   }
 
-  Future<void> updateExpenseReceipt(
-    String uid,
-    String expenseId,
-    String receiptUrl,
-  ) async {
-    await _expenses(uid).doc(expenseId).update({'receiptUrl': receiptUrl});
+  /// Full overwrite so cleared fields (e.g. removed quantity / rate) are
+  /// really removed — the model already carries every field to keep.
+  Future<void> updateExpense(String uid, ExpenseModel expense) async {
+    await _expenses(uid).doc(expense.id).set(expense.toMap());
   }
+
+  // Image attachments are disabled for now.
+  // Future<void> updateExpenseReceipt(
+  //   String uid,
+  //   String expenseId,
+  //   String receiptUrl,
+  // ) async {
+  //   await _expenses(uid).doc(expenseId).update({'receiptUrl': receiptUrl});
+  // }
 
   Future<void> updateAvatarUrl(String uid, String avatarUrl) async {
     await _user(uid).set({'avatarUrl': avatarUrl}, SetOptions(merge: true));

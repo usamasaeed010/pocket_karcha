@@ -17,14 +17,29 @@ abstract final class AppNavigator {
         .pushReplacementNamed(AppRoutes.completeProfile);
   }
 
-  static void toHome(BuildContext context) {
-    Navigator.of(context, rootNavigator: true)
-        .pushReplacementNamed(AppRoutes.home);
+  /// New owner (or signed in without a store yet) → create the store.
+  static void toStoreSetup(BuildContext context) {
+    Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
+      AppRoutes.storeSetup,
+      (_) => false,
+    );
   }
 
-  static void resetToAuth(BuildContext context) {
+  static void toHome(BuildContext context) {
     Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
-      AppRoutes.auth,
+      AppRoutes.home,
+      (_) => false,
+    );
+  }
+
+  /// Old khata screens call this after logout; the start screen is now
+  /// onboarding (create store / sign in).
+  static void resetToAuth(BuildContext context) => resetToOnboarding(context);
+
+  /// After logout / account deletion.
+  static void resetToOnboarding(BuildContext context) {
+    Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
+      AppRoutes.onboarding,
       (_) => false,
     );
   }

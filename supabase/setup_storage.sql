@@ -19,7 +19,7 @@ drop policy if exists "Anon upload pocket-karcha" on storage.objects;
 drop policy if exists "Anon update pocket-karcha" on storage.objects;
 drop policy if exists "Anon delete pocket-karcha" on storage.objects;
 
-create policy "Public read pocket-karcha"
+create policy "Public read pocket-karcha"   
 on storage.objects for select
 to public
 using ( bucket_id = 'pocket-karcha' );

@@ -1,17 +1,17 @@
-import 'dart:io';
+// import 'dart:io'; // Profile photo upload is disabled for now.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
 import 'package:pocket_karcha/core/constants/app_spacing.dart';
 import 'package:pocket_karcha/features/settings/widgets/settings_row.dart';
 import 'package:pocket_karcha/features/settings/widgets/settings_section_card.dart';
-import 'package:pocket_karcha/providers/auth_provider.dart';
-import 'package:pocket_karcha/providers/firebase_providers.dart';
+// import 'package:pocket_karcha/providers/auth_provider.dart';
+// import 'package:pocket_karcha/providers/firebase_providers.dart';
 import 'package:pocket_karcha/providers/locale_provider.dart';
 import 'package:pocket_karcha/providers/session_provider.dart';
-import 'package:pocket_karcha/shared/widgets/app_bottom_sheet.dart';
+// import 'package:pocket_karcha/shared/widgets/app_bottom_sheet.dart';
 import 'package:pocket_karcha/shared/widgets/app_button.dart';
 import 'package:pocket_karcha/shared/widgets/app_snackbar.dart';
 import 'package:pocket_karcha/shared/widgets/app_text_field.dart';
@@ -28,7 +28,7 @@ class ManageAccountScreen extends ConsumerStatefulWidget {
 
 class _ManageAccountScreenState extends ConsumerState<ManageAccountScreen> {
   late final TextEditingController _name;
-  bool _uploading = false;
+  // bool _uploading = false; // Profile photo upload is disabled for now.
   bool _savingName = false;
   String? _error;
 
@@ -78,77 +78,78 @@ class _ManageAccountScreenState extends ConsumerState<ManageAccountScreen> {
     }
   }
 
-  Future<void> _pickAndUploadAvatar() async {
-    final s = ref.read(appStringsProvider);
-    final uid = ref.read(currentUserIdProvider);
-    final storage = ref.read(storageServiceProvider);
-    final profiles = ref.read(userProfileServiceProvider);
-
-    if (uid == null || storage == null || profiles == null) {
-      setState(() => _error = s.profilePhotoUnavailable);
-      context.showErrorSnack(s.profilePhotoUnavailable);
-      return;
-    }
-
-    final source = await showAppOptionsBottomSheet<ImageSource>(
-      context: context,
-      title: s.profilePhoto,
-      subtitle: s.changeProfilePhoto,
-      options: [
-        AppBottomSheetOption(
-          value: ImageSource.camera,
-          label: s.takePhoto,
-          leading: const Icon(Icons.camera_alt_outlined,
-              color: AppColors.dashboardGreen),
-        ),
-        AppBottomSheetOption(
-          value: ImageSource.gallery,
-          label: s.chooseGallery,
-          leading: const Icon(Icons.photo_library_outlined,
-              color: AppColors.dashboardGreen),
-        ),
-      ],
-    );
-    if (source == null || !mounted) return;
-
-    final picked = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 1200,
-      imageQuality: 90,
-    );
-    if (picked == null || !mounted) return;
-
-    setState(() {
-      _uploading = true;
-      _error = null;
-    });
-
-    try {
-      final url = await profiles.updateAvatar(
-        uid: uid,
-        file: File(picked.path),
-        storage: storage,
-      );
-      await ref.read(sessionProvider.notifier).updateAvatarUrl(url);
-      if (mounted) {
-        context.showSuccessSnack(s.snackProfilePhotoUpdated);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _error = e.toString());
-        context.showErrorSnack(e.toString());
-      }
-    } finally {
-      if (mounted) setState(() => _uploading = false);
-    }
-  }
+  // Image / profile photo upload is disabled for now.
+  // Future<void> _pickAndUploadAvatar() async {
+  //   final s = ref.read(appStringsProvider);
+  //   final uid = ref.read(currentUserIdProvider);
+  //   final storage = ref.read(storageServiceProvider);
+  //   final profiles = ref.read(userProfileServiceProvider);
+  //
+  //   if (uid == null || storage == null || profiles == null) {
+  //     setState(() => _error = s.profilePhotoUnavailable);
+  //     context.showErrorSnack(s.profilePhotoUnavailable);
+  //     return;
+  //   }
+  //
+  //   final source = await showAppOptionsBottomSheet<ImageSource>(
+  //     context: context,
+  //     title: s.profilePhoto,
+  //     subtitle: s.changeProfilePhoto,
+  //     options: [
+  //       AppBottomSheetOption(
+  //         value: ImageSource.camera,
+  //         label: s.takePhoto,
+  //         leading: const Icon(Icons.camera_alt_outlined,
+  //             color: AppColors.dashboardGreen),
+  //       ),
+  //       AppBottomSheetOption(
+  //         value: ImageSource.gallery,
+  //         label: s.chooseGallery,
+  //         leading: const Icon(Icons.photo_library_outlined,
+  //             color: AppColors.dashboardGreen),
+  //       ),
+  //     ],
+  //   );
+  //   if (source == null || !mounted) return;
+  //
+  //   final picked = await ImagePicker().pickImage(
+  //     source: source,
+  //     maxWidth: 1200,
+  //     imageQuality: 90,
+  //   );
+  //   if (picked == null || !mounted) return;
+  //
+  //   setState(() {
+  //     _uploading = true;
+  //     _error = null;
+  //   });
+  //
+  //   try {
+  //     final url = await profiles.updateAvatar(
+  //       uid: uid,
+  //       file: File(picked.path),
+  //       storage: storage,
+  //     );
+  //     await ref.read(sessionProvider.notifier).updateAvatarUrl(url);
+  //     if (mounted) {
+  //       context.showSuccessSnack(s.snackProfilePhotoUpdated);
+  //     }
+  //   } catch (e) {
+  //     if (mounted) {
+  //       setState(() => _error = e.toString());
+  //       context.showErrorSnack(e.toString());
+  //     }
+  //   } finally {
+  //     if (mounted) setState(() => _uploading = false);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(appStringsProvider);
     final session = ref.watch(sessionProvider);
     final initial = _initial(session);
-    final busy = _uploading || _savingName;
+    final busy = _savingName; // _uploading || _savingName
 
     return AppPage(
       title: s.editProfile,
@@ -168,42 +169,44 @@ class _ManageAccountScreenState extends ConsumerState<ManageAccountScreen> {
                       radius: 48,
                       showBorder: true,
                     ),
-                    Material(
-                      color: AppColors.dashboardGreen,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: busy ? null : _pickAndUploadAvatar,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: _uploading
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.camera_alt_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                        ),
-                      ),
-                    ),
+                    // Profile photo upload is disabled for now.
+                    // Material(
+                    //   color: AppColors.dashboardGreen,
+                    //   shape: const CircleBorder(),
+                    //   child: InkWell(
+                    //     customBorder: const CircleBorder(),
+                    //     onTap: busy ? null : _pickAndUploadAvatar,
+                    //     child: Padding(
+                    //       padding: const EdgeInsets.all(8),
+                    //       child: _uploading
+                    //           ? const SizedBox(
+                    //               width: 18,
+                    //               height: 18,
+                    //               child: CircularProgressIndicator(
+                    //                 strokeWidth: 2,
+                    //                 color: Colors.white,
+                    //               ),
+                    //             )
+                    //           : const Icon(
+                    //               Icons.camera_alt_rounded,
+                    //               color: Colors.white,
+                    //               size: 18,
+                    //             ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  s.changeProfilePhoto,
-                  style: const TextStyle(
-                    color: AppColors.dashboardGreen,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
+                // Profile photo upload is disabled for now.
+                // const SizedBox(height: 10),
+                // Text(
+                //   s.changeProfilePhoto,
+                //   style: const TextStyle(
+                //     color: AppColors.dashboardGreen,
+                //     fontWeight: FontWeight.w600,
+                //     fontSize: 14,
+                //   ),
+                // ),
               ],
             ),
           ),

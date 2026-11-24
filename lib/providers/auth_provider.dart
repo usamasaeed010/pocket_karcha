@@ -34,3 +34,9 @@ final selectedCurrencyProvider = Provider<String>((ref) {
   final session = ref.watch(sessionProvider);
   return session.currency ?? 'PKR';
 });
+
+/// Emits on sign-in/out AND on account linking (anonymous → email backup).
+final firebaseUserProvider = StreamProvider<User?>((ref) {
+  if (!FirebaseService.isReady) return Stream.value(null);
+  return FirebaseAuth.instance.userChanges();
+});

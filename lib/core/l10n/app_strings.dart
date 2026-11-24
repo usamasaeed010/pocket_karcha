@@ -3,7 +3,7 @@ import 'package:pocket_karcha/features/settings/models/app_terminology.dart';
 import 'package:pocket_karcha/providers/dashboard_provider.dart';
 
 class AppStrings {
-  AppStrings(this.isUrdu, {this.terminologyMode = AppTerminology.gotGave});
+  AppStrings(this.isUrdu, {this.terminologyMode = AppTerminology.shop});
 
   final bool isUrdu;
   final AppTerminology terminologyMode;
@@ -39,7 +39,7 @@ class AppStrings {
   String get language => isUrdu ? 'زبان' : 'Language';
   String get english => 'English';
   String get urdu => 'اردو';
-  String get noExpenses => isUrdu ? 'ابھی کوئی خرچ نہیں' : 'No expenses yet';
+  String get noExpenses => isUrdu ? 'ابھی کوئی اندراج نہیں' : 'No entries yet';
   String get loginHint => isUrdu
       ? 'اکاؤنٹ بنائیں یا سائن ان کریں'
       : 'Create an account or sign in';
@@ -79,13 +79,13 @@ class AppStrings {
   String get onboardingTitle1 =>
       isUrdu ? 'خوش آمدید!' : 'Welcome to Pocket Karcha';
   String get onboardingBody1 => isUrdu
-      ? 'پاکستان کے لیے آسان expense tracker۔'
-      : 'Simple expense tracker built for Pakistan.';
+      ? 'دکانوں، ٹھیلوں اور چھوٹے کاروبار کا آسان کھاتہ۔'
+      : 'Simple business khata for shops, stalls & small businesses.';
   String get onboardingTitle2 =>
-      isUrdu ? 'سب کچھ ایک جگہ' : 'All in one place';
+      isUrdu ? 'اپنا اصل منافع جانیں' : 'Know your real profit';
   String get onboardingBody2 => isUrdu
-      ? 'اقسام، چارٹ، رسید، تیز تجاویز۔'
-      : 'Categories, charts, receipts, quick adds.';
+      ? 'فروخت، مال کی خریداری اور دکان کے خرچ درج کریں — ہر ماہ کا منافع دیکھیں۔'
+      : 'Record sales, bulk stock purchases & shop expenses — see your profit every month.';
   String get onboardingTitle3 =>
       isUrdu ? 'زبان منتخب کریں' : 'Choose language';
   String get onboardingBody3 => isUrdu
@@ -141,16 +141,16 @@ class AppStrings {
     switch (period) {
       case DashboardPeriod.day:
         return isUrdu
-            ? 'آج کا خرچ یا آمدنی شامل کریں'
-            : 'Add your first expense or income for today';
+            ? 'آج کی فروخت، خریداری یا خرچ شامل کریں'
+            : "Add today's sale, stock purchase or expense";
       case DashboardPeriod.week:
         return isUrdu
-            ? 'اس ہفتے کی لین دین یہاں دکھائی جائے گی'
-            : 'Transactions for this week will appear here';
+            ? 'اس ہفتے کے اندراجات یہاں دکھائی دیں گے'
+            : "This week's entries will appear here";
       case DashboardPeriod.month:
         return isUrdu
-            ? 'اس ماہ کی لین دین یہاں دکھائی جائے گی'
-            : 'Transactions for this month will appear here';
+            ? 'اس ماہ کے اندراجات یہاں دکھائی دیں گے'
+            : "This month's entries will appear here";
     }
   }
 
@@ -166,9 +166,19 @@ class AppStrings {
   String get youGot => terminologyMode.pair(isUrdu).positive;
   String get youGave => terminologyMode.pair(isUrdu).negative;
   String get youGaveHint =>
-      isUrdu ? 'پیسے دیے / خرچ' : 'Money paid out';
+      isUrdu ? 'کرایہ، بل، تنخواہ، گیس' : 'Rent, bills, salary, gas';
   String get youGotHint =>
-      isUrdu ? 'پیسے ملے / آمدنی' : 'Money received';
+      isUrdu ? 'فروخت و آمدنی' : 'Sales & money in';
+  String get purchase => isUrdu ? 'خریداری' : 'Purchase';
+  String get purchaseHint =>
+      isUrdu ? 'مال و خام سامان' : 'Stock & raw material';
+
+  /// Title for an entry kind (respects the terminology setting).
+  String typeLabel(TransactionType type) => switch (type) {
+        TransactionType.got => youGot,
+        TransactionType.purchase => purchase,
+        TransactionType.gave => youGave,
+      };
   String get chooseTransactionType => isUrdu
       ? 'لین دین کی قسم منتخب کریں'
       : 'Choose transaction type';
@@ -176,9 +186,15 @@ class AppStrings {
   String recordingLabel(TransactionType type) {
     switch (type) {
       case TransactionType.gave:
-        return isUrdu ? 'خرچ درج ہو رہا ہے' : 'Recording money you gave';
+        return isUrdu
+            ? 'دکان کا خرچہ درج ہو رہا ہے'
+            : 'Recording a shop expense';
+      case TransactionType.purchase:
+        return isUrdu
+            ? 'مال کی خریداری درج ہو رہی ہے'
+            : 'Recording a stock purchase';
       case TransactionType.got:
-        return isUrdu ? 'آمدنی درج ہو رہی ہے' : 'Recording money you got';
+        return isUrdu ? 'فروخت درج ہو رہی ہے' : 'Recording a sale';
     }
   }
   String get balance => isUrdu ? 'بیلنس' : 'Balance';
@@ -315,8 +331,8 @@ class AppStrings {
       ? 'ابھی کوئی لین دین نہیں'
       : 'No transactions yet';
   String get noTransactionsForPersonDesc => isUrdu
-      ? 'You Gave یا You Got بٹن سے شامل کریں'
-      : 'Add with You Gave or You Got buttons';
+      ? 'نیچے دیے گئے بٹن سے فروخت، خریداری یا خرچ شامل کریں'
+      : 'Add a sale, purchase or expense with the buttons below';
   String get contactsPermissionDenied => isUrdu
       ? 'رابطوں کی اجازت درکار ہے'
       : 'Contacts permission is required';
@@ -334,8 +350,8 @@ class AppStrings {
       ? 'مدت، کرنسی، زبان اور مزید'
       : 'Period, currency, language & more';
   String get categoriesDesc => isUrdu
-      ? 'You Gave / You Got اقسام'
-      : 'Manage You Gave & You Got categories';
+      ? 'فروخت، خریداری اور خرچ کی اقسام'
+      : 'Sale, purchase & expense categories';
   String get loanCalculatorsDesc => isUrdu
       ? 'EMI، فلیٹ اور ریڈucing balance'
       : 'EMI, flat & reducing balance loans';
@@ -352,14 +368,14 @@ class AppStrings {
       ? 'پالیسی لوڈ نہیں ہو سکی۔ انٹرنیٹ چیک کریں۔'
       : 'Could not load the privacy policy. Check your internet connection.';
   String get aboutUsDesc => isUrdu
-      ? 'پاکٹ خرچہ — Pakistan expense tracker'
-      : 'Pocket Karcha — expense tracker for Pakistan';
+      ? 'پاکٹ خرچہ — دکان کا خرچ و منافع ٹریکر'
+      : 'Pocket Karcha — shop expense & profit tracker';
   String get languageDesc => isUrdu
       ? 'ایپ کی زبان منتخب کریں'
       : 'Choose app display language';
   String get terminologyDesc => isUrdu
-      ? 'You Got / You Gave labels'
-      : 'Customize income & expense labels';
+      ? 'فروخت / خرچ کے نام'
+      : 'Customize sale & expense labels';
   String get timePeriodDesc => isUrdu
       ? 'ڈیش بورڈ کی default مدت'
       : 'Default dashboard time period';
@@ -433,9 +449,30 @@ class AppStrings {
 
   String get snackSavedSuccess =>
       isUrdu ? 'کامیابی سے محفوظ ہو گیا' : 'Saved successfully';
+  String get receiptAttached =>
+      isUrdu ? 'رسید منسلک ہے' : 'Receipt attached';
   String get snackTransactionAdded => isUrdu
       ? 'لین دین شامل ہو گئی'
       : 'Transaction added successfully';
+  String get editTransaction =>
+      isUrdu ? 'لین دین میں ترمیم' : 'Edit transaction';
+  String get deleteTransaction =>
+      isUrdu ? 'لین دین حذف کریں' : 'Delete transaction';
+  String get transactionOptions =>
+      isUrdu ? 'لین دین کے اختیارات' : 'Transaction options';
+  String get transaction => isUrdu ? 'لین دین' : 'Transaction';
+  String get deleteTransactionConfirm => isUrdu
+      ? 'کیا آپ یہ لین دین حذف کرنا چاہتے ہیں؟'
+      : 'Delete this transaction?';
+  String get deleteTransactionWarning => isUrdu
+      ? 'یہ عمل واپس نہیں ہو سکتا۔'
+      : 'This action cannot be undone.';
+  String get snackTransactionUpdated => isUrdu
+      ? 'لین دین اپ ڈیٹ ہو گئی'
+      : 'Transaction updated successfully';
+  String get snackTransactionDeleted => isUrdu
+      ? 'لین دین حذف ہو گئی'
+      : 'Transaction deleted successfully';
   String get snackPersonAdded =>
       isUrdu ? 'شخص شامل ہو گیا' : 'Person added successfully';
   String get snackCategorySaved =>
@@ -458,4 +495,126 @@ class AppStrings {
   String get snackEnterCategoryName => isUrdu
       ? 'قسم کا نام درج کریں'
       : 'Please enter a category name';
+
+  // ── Shop / business ────────────────────────────────────────────────────
+  String get shopTagline => isUrdu
+      ? 'فروخت، خریداری اور منافع کا حساب'
+      : 'Sales, stock & profit — all in one place';
+  String get profit => isUrdu ? 'منافع' : 'Profit';
+  String get loss => isUrdu ? 'نقصان' : 'Loss';
+  String get netProfit => isUrdu ? 'خالص منافع' : 'Net profit';
+  String get netLoss => isUrdu ? 'خالص نقصان' : 'Net loss';
+  String profitOrLoss(double value) => value < 0 ? loss : profit;
+  String periodResultTitle(DashboardPeriod period, {required bool loss}) {
+    final word = loss ? this.loss : profit;
+    switch (period) {
+      case DashboardPeriod.day:
+        return isUrdu ? 'آج کا $word' : "Today's ${word.toLowerCase()}";
+      case DashboardPeriod.week:
+        return isUrdu
+            ? 'اس ہفتے کا $word'
+            : "This week's ${word.toLowerCase()}";
+      case DashboardPeriod.month:
+        return isUrdu
+            ? 'اس ماہ کا $word'
+            : "This month's ${word.toLowerCase()}";
+    }
+  }
+
+  String marginLabel(String percent) =>
+      isUrdu ? 'مارجن $percent%' : '$percent% margin';
+  String profitShort(String amount) =>
+      isUrdu ? 'منافع $amount' : 'Profit $amount';
+  String lossShort(String amount) => isUrdu ? 'نقصان $amount' : 'Loss $amount';
+  String get spending => isUrdu ? 'کل خرچ' : 'Total spent';
+  String get moneyIn => isUrdu ? 'آمدن' : 'Money in';
+  String get moneyOut => isUrdu ? 'اخراجات' : 'Money out';
+  String get quickAdd => isUrdu ? 'فوری اندراج' : 'Quick add';
+  String get all => isUrdu ? 'سب' : 'All';
+
+  // Budget
+  String get monthlyBudget => isUrdu ? 'ماہانہ بجٹ' : 'Monthly budget';
+  String get monthlyBudgetDesc => isUrdu
+      ? 'مال اور دکان کے خرچ کی ماہانہ حد'
+      : 'Monthly limit for stock & shop expenses';
+  String get setBudget => isUrdu ? 'بجٹ مقرر کریں' : 'Set budget';
+  String get editBudget => isUrdu ? 'بجٹ تبدیل کریں' : 'Edit budget';
+  String get removeBudget => isUrdu ? 'بجٹ ہٹائیں' : 'Remove budget';
+  String get budgetAmount => isUrdu ? 'بجٹ کی رقم' : 'Budget amount';
+  String get setBudgetHint => isUrdu
+      ? 'اس ماہ مال کی خریداری اور دکان کے خرچ کے لیے کتنی رقم رکھنی ہے؟'
+      : 'How much can you spend on stock and shop expenses this month?';
+  String get setBudgetCta => isUrdu
+      ? 'بجٹ مقرر کریں اور ہر روز دیکھیں کتنا خرچ کر سکتے ہیں'
+      : 'Set a budget and see how much you can spend each day';
+  String get remaining => isUrdu ? 'باقی' : 'Remaining';
+  String get overBudget => isUrdu ? 'بجٹ سے زیادہ' : 'Over budget';
+  String budgetUsed(int percent) =>
+      isUrdu ? '$percent% استعمال ہوا' : '$percent% used';
+  String spentOfBudget(String spent, String budget) =>
+      isUrdu ? '$budget میں سے $spent خرچ' : '$spent spent of $budget';
+  String perDayAllowance(String amount, int days) => isUrdu
+      ? 'باقی $days دن کے لیے روزانہ $amount تک خرچ کر سکتے ہیں'
+      : 'You can spend $amount/day for the next $days days';
+  String get budgetExceededHint => isUrdu
+      ? 'اس ماہ کا بجٹ ختم ہو گیا — خرچ پر نظر رکھیں'
+      : 'Budget used up for this month — keep an eye on spending';
+  String get snackBudgetSaved =>
+      isUrdu ? 'بجٹ محفوظ ہو گیا' : 'Budget saved';
+  String get snackBudgetRemoved =>
+      isUrdu ? 'بجٹ ہٹا دیا گیا' : 'Budget removed';
+
+  // Reports
+  String get reports => isUrdu ? 'رپورٹس' : 'Reports';
+  String get reportsDesc =>
+      isUrdu ? 'ماہانہ نفع و نقصان' : 'Monthly profit & loss';
+  String get last6Months => isUrdu ? 'پچھلے 6 ماہ' : 'Last 6 months';
+  String get whereMoneyWent =>
+      isUrdu ? 'پیسہ کہاں خرچ ہوا' : 'Where your money went';
+  String get stockByCategory =>
+      isUrdu ? 'خریداری بلحاظ قسم' : 'Purchases by category';
+  String get expensesByCategory =>
+      isUrdu ? 'خرچ بلحاظ قسم' : 'Expenses by category';
+  String get salesByCategory =>
+      isUrdu ? 'فروخت بلحاظ قسم' : 'Sales by category';
+  String get topPurchasedItems =>
+      isUrdu ? 'سب سے زیادہ خریدا گیا مال' : 'Top purchased items';
+  String get topSoldItems =>
+      isUrdu ? 'سب سے زیادہ بکنے والی اشیاء' : 'Top selling items';
+  String get avgDailySales =>
+      isUrdu ? 'اوسط روزانہ فروخت' : 'Avg. daily sale';
+  String get entries => isUrdu ? 'اندراجات' : 'Entries';
+  String entriesCount(int n) =>
+      isUrdu ? '$n اندراجات' : '$n ${n == 1 ? 'entry' : 'entries'}';
+  String get noDataForMonth =>
+      isUrdu ? 'اس ماہ کوئی اندراج نہیں' : 'No entries for this month';
+  String get noDataForMonthHint => isUrdu
+      ? 'منافع کی رپورٹ دیکھنے کے لیے فروخت، خریداری اور خرچ شامل کریں۔'
+      : 'Add sales, purchases and expenses to see your profit report.';
+  String avgRate(String rate, String unit) =>
+      isUrdu ? 'اوسط $rate فی $unit' : 'avg $rate / $unit';
+  String timesCount(int n) => isUrdu ? '$n بار' : '${n}x';
+  String get myShop => isUrdu ? 'میری دکان' : 'My shop';
+  String get calculators => isUrdu ? 'کیلکولیٹرز' : 'Calculators';
+
+  // Item details (add screen)
+  String get itemDetails => isUrdu ? 'سامان کی تفصیل' : 'Item details';
+  String get itemName => isUrdu ? 'چیز کا نام' : 'Item name';
+  String get itemNameHint =>
+      isUrdu ? 'مثلاً کیلے، سیب، برگر بن' : 'e.g. Bananas, Apples, Burger buns';
+  String get saleItemNameHint =>
+      isUrdu ? 'مثلاً جوس گلاس، فروٹ چاٹ' : 'e.g. Juice glass, Fruit chaat';
+  String get quantity => isUrdu ? 'مقدار' : 'Quantity';
+  String get unit => isUrdu ? 'یونٹ' : 'Unit';
+  String get selectUnit => isUrdu ? 'یونٹ منتخب کریں' : 'Select unit';
+  String get rate => isUrdu ? 'ریٹ' : 'Rate';
+  String ratePer(String unit) => isUrdu ? 'فی $unit ریٹ' : 'Rate / $unit';
+  String get totalAmount => isUrdu ? 'کل رقم' : 'Total amount';
+  String get autoCalculated => isUrdu
+      ? 'مقدار × ریٹ سے خودکار حساب'
+      : 'Auto-calculated from quantity × rate';
+  String get recentItems => isUrdu ? 'حالیہ اشیاء' : 'Recent items';
+  String get addQtyRate =>
+      isUrdu ? 'مقدار اور ریٹ شامل کریں' : 'Add quantity & rate';
+  String get optional => isUrdu ? 'اختیاری' : 'Optional';
 }

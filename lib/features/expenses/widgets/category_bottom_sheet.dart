@@ -14,9 +14,7 @@ Future<String?> showCategoryBottomSheet(
 }) {
   final s = ref.read(appStringsProvider);
   final urdu = ref.read(localeUrduProvider);
-  final categories = scope == CategoryScope.gave
-      ? ref.read(gaveCategoriesProvider)
-      : ref.read(gotCategoriesProvider);
+  final categories = ref.read(categoriesForScopeProvider(scope));
 
   return showAppBottomSheet<String>(
     context: context,
@@ -25,7 +23,7 @@ Future<String?> showCategoryBottomSheet(
     child: ListView.separated(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
       itemCount: categories.length,
-      separatorBuilder: (_, __) => const Divider(
+      separatorBuilder: (_, _) => const Divider(
         height: 1,
         indent: 56,
         color: Color(0xFFF1F5F9),

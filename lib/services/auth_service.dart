@@ -40,6 +40,24 @@ class AuthService {
     );
   }
 
+  /// "Create my store" — a guest account that can be backed up later.
+  Future<UserCredential> signInAnonymously() => _auth.signInAnonymously();
+
+  /// "Back up your store": turns the guest account into an email account,
+  /// keeping the same uid (so the store and orders stay).
+  Future<UserCredential> linkWithEmail({
+    required String email,
+    required String password,
+  }) {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(code: 'no-current-user');
+    }
+    return user.linkWithCredential(
+      EmailAuthProvider.credential(email: email.trim(), password: password),
+    );
+  }
+
   Future<void> updateDisplayName(String name) async {
     await currentUser?.updateDisplayName(name.trim());
     await currentUser?.reload();

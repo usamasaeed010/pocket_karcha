@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
-import 'package:pocket_karcha/core/l10n/app_strings.dart';
+import 'package:pocket_karcha/core/constants/stock_units.dart';
 import 'package:pocket_karcha/core/utils/currency_formatter.dart';
 import 'package:pocket_karcha/core/utils/date_utils.dart';
 import 'package:pocket_karcha/data/models/expense_model.dart';
@@ -10,19 +10,24 @@ import 'package:pocket_karcha/features/expenses/widgets/transaction_type_theme.d
 import 'package:pocket_karcha/providers/categories_provider.dart';
 import 'package:pocket_karcha/providers/locale_provider.dart';
 
-/// Home + History transaction row — compact layout, clear receipt indicator.
+/// Home + History row: category icon, item / note, qty × rate, amount.
 class TransactionListTile extends ConsumerWidget {
   const TransactionListTile({
     super.key,
     required this.expense,
     required this.currencyCode,
-    this.onViewReceipt,
+    // Image attachments are disabled for now.
+    // this.onViewReceipt,
+    this.onOptions,
     this.showTypeLabel = false,
   });
 
   final ExpenseModel expense;
   final String currencyCode;
-  final VoidCallback? onViewReceipt;
+  // final VoidCallback? onViewReceipt;
+  final VoidCallback? onOptions;
+
+  /// Shows the Sale / Purchase / Expense badge and full date (History).
   final bool showTypeLabel;
 
   @override
@@ -31,47 +36,50 @@ class TransactionListTile extends ConsumerWidget {
     final s = ref.watch(appStringsProvider);
     final cat = ref.watch(categoryByIdProvider(expense.categoryId));
     final categoryLabel = cat.label(urdu);
-    final type =
-        expense.isIncome ? TransactionType.got : TransactionType.gave;
+    final type = TransactionType.fromRecord(expense.type);
     final look = lookFor(type, s);
-    final hasReceipt = expense.hasReceipt && onViewReceipt != null;
-    final title = expense.note.isNotEmpty ? expense.note : categoryLabel;
-    final dateLabel = showTypeLabel
-        ? _formatDate(expense.date)
-        : '${categoryLabel} · ${AppDateUtils.formatShort(expense.date)}';
+
+    final title = expense.hasItemName
+        ? expense.itemName!.trim()
+        : (expense.note.isNotEmpty ? expense.note : categoryLabel);
+
+    final details = <String>[];
+    if (expense.hasQuantity) {
+      final unit = StockUnits.byKey(expense.unit);
+      final qty = '${StockUnits.formatQty(expense.quantity!)} ${unit.short(urdu)}';
+      details.add(
+        expense.unitPrice != null
+            ? '$qty × ${CurrencyFormatter.format(expense.unitPrice!, currencyCode: currencyCode)}'
+            : qty,
+      );
+    }
+    if (title != categoryLabel) details.add(categoryLabel);
+    details.add(
+      showTypeLabel
+          ? _formatDate(expense.date)
+          : AppDateUtils.formatShort(expense.date),
+    );
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: hasReceipt ? onViewReceipt : null,
-        child: Tooltip(
-          message: hasReceipt ? s.tapReceiptHint : '',
-          triggerMode: hasReceipt
-              ? TooltipTriggerMode.longPress
-              : TooltipTriggerMode.manual,
-          child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        onTap: onOptions,
+        onLongPress: onOptions,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _TypeIcon(look: look),
+              _CategoryIcon(
+                icon: cat.icon,
+                color: cat.color,
+                look: look,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (showTypeLabel) ...[
-                      Text(
-                        expense.isIncome ? s.youGot : s.youGave,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                    ],
                     Text(
                       title,
                       maxLines: 1,
@@ -82,29 +90,17 @@ class TransactionListTile extends ConsumerWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            dateLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        if (expense.hasReceipt) ...[
-                          const SizedBox(width: 6),
-                          _ReceiptBadge(
-                            label: s.receipt,
-                            active: hasReceipt,
-                          ),
-                        ],
-                      ],
+                    const SizedBox(height: 3),
+                    Text(
+                      details.join('  ·  '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
                     ),
+                    // Image attachments are disabled for now — no receipt badge.
                   ],
                 ),
               ),
@@ -114,7 +110,7 @@ class TransactionListTile extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${expense.isIncome ? '+' : '-'}${CurrencyFormatter.format(expense.amount, currencyCode: currencyCode)}',
+                    '${look.sign}${CurrencyFormatter.format(expense.amount, currencyCode: currencyCode)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -123,19 +119,19 @@ class TransactionListTile extends ConsumerWidget {
                       fontSize: 15,
                     ),
                   ),
-                  if (hasReceipt) ...[
-                    const SizedBox(height: 4),
+                  const SizedBox(height: 4),
+                  if (showTypeLabel)
+                    _TypeBadge(look: look)
+                  else if (onOptions != null)
                     Icon(
-                      Icons.receipt_long_rounded,
-                      size: 16,
-                      color: AppColors.navActive,
+                      Icons.more_horiz_rounded,
+                      size: 18,
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),
-                  ],
                 ],
               ),
             ],
           ),
-        ),
         ),
       ),
     );
@@ -148,68 +144,81 @@ class TransactionListTile extends ConsumerWidget {
   }
 }
 
-class _TypeIcon extends StatelessWidget {
-  const _TypeIcon({required this.look});
+class _CategoryIcon extends StatelessWidget {
+  const _CategoryIcon({
+    required this.icon,
+    required this.color,
+    required this.look,
+  });
+
+  final IconData icon;
+  final Color color;
+  final TransactionTypeLook look;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 46,
+      height: 46,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: color, size: 23),
+          ),
+          Positioned(
+            right: -3,
+            bottom: -3,
+            child: Container(
+              width: 19,
+              height: 19,
+              decoration: BoxDecoration(
+                color: look.color,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: Icon(
+                look.type.isIncome
+                    ? Icons.arrow_downward_rounded
+                    : Icons.arrow_upward_rounded,
+                size: 10,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypeBadge extends StatelessWidget {
+  const _TypeBadge({required this.look});
 
   final TransactionTypeLook look;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 44,
-      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: look.surface,
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: look.border),
       ),
-      child: Icon(look.icon, color: look.color, size: 21),
-    );
-  }
-}
-
-class _ReceiptBadge extends StatelessWidget {
-  const _ReceiptBadge({
-    required this.label,
-    required this.active,
-  });
-
-  final String label;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: active
-            ? AppColors.navActive.withValues(alpha: 0.12)
-            : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: active
-              ? AppColors.navActive.withValues(alpha: 0.35)
-              : const Color(0xFFE2E8F0),
+      child: Text(
+        look.title,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: look.color,
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.receipt_long_rounded,
-            size: 12,
-            color: active ? AppColors.navActive : AppColors.textSecondary,
-          ),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: active ? AppColors.navActive : AppColors.textSecondary,
-            ),
-          ),
-        ],
       ),
     );
   }

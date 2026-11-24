@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pocket_karcha/core/constants/app_colors.dart';
 import 'package:pocket_karcha/core/theme/app_fonts.dart';
-import 'package:pocket_karcha/shared/widgets/profile_avatar.dart';
 
 /// Toolbar typography — uses app theme fonts (Inter / Noto Nastaliq Urdu).
 abstract final class AppToolbarStyle {

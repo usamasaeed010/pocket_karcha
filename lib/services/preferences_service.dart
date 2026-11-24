@@ -26,6 +26,11 @@ class PreferencesService {
   static const _peopleKey = 'people_contacts_v1';
   static const _dateRangeStartKey = 'date_range_start';
   static const _dateRangeEndKey = 'date_range_end';
+  static const _monthlyBudgetKey = 'monthly_budget_v1';
+  static const _personalBudgetKey = 'personal_budget_v1';
+  static const _orderAlertsCardKey = 'order_alerts_card_dismissed';
+  static const _notifyBuyerKey = 'notify_buyer_whatsapp';
+  static const _storeReadyPrefix = 'store_ready_';
 
   bool get onboardingComplete => _prefs.getBool(_onboardingKey) ?? false;
   bool get localeUrdu => _prefs.getBool(_localeUrduKey) ?? false;
@@ -40,6 +45,9 @@ class PreferencesService {
   String? get userPhone => _prefs.getString(_phoneKey);
   String? get userCurrency => _prefs.getString(_currencyKey);
   String? get avatarUrl => _prefs.getString(_avatarUrlKey);
+
+  /// Monthly spending limit for purchases + expenses (0 = not set).
+  double get monthlyBudget => _prefs.getDouble(_monthlyBudgetKey) ?? 0;
 
   SessionType get sessionType {
     final raw = _prefs.getString(_sessionTypeKey);
@@ -145,6 +153,56 @@ class PreferencesService {
   }
 
   Future<void> clearDateRange() => setDateRange(null, null);
+
+  Future<void> setMonthlyBudget(double value) async {
+    if (value <= 0) {
+      await _prefs.remove(_monthlyBudgetKey);
+    } else {
+      await _prefs.setDouble(_monthlyBudgetKey, value);
+    }
+  }
+
+  /// Monthly limit for personal (home) spending, 0 = not set.
+  double get personalBudget => _prefs.getDouble(_personalBudgetKey) ?? 0;
+
+  Future<void> setPersonalBudget(double value) async {
+    if (value <= 0) {
+      await _prefs.remove(_personalBudgetKey);
+    } else {
+      await _prefs.setDouble(_personalBudgetKey, value);
+    }
+  }
+
+  /// People used to be saved only on the phone; cleared once they are
+  /// copied into the account.
+  Future<void> clearPeopleJson() async {
+    await _prefs.remove(_peopleKey);
+  }
+
+  /// Shown once: the "turn on order alerts" card on Home was dismissed.
+  bool get orderAlertsCardDismissed =>
+      _prefs.getBool(_orderAlertsCardKey) ?? false;
+
+  Future<void> setOrderAlertsCardDismissed() async {
+    await _prefs.setBool(_orderAlertsCardKey, true);
+  }
+
+  /// Order screen: open WhatsApp to tell the buyer about status changes.
+  bool get notifyBuyer => _prefs.getBool(_notifyBuyerKey) ?? true;
+
+  Future<void> setNotifyBuyer(bool value) =>
+      _prefs.setBool(_notifyBuyerKey, value);
+
+  /// Cached "this account already has a store" — lets the app open offline.
+  bool storeReady(String uid) => _prefs.getBool('$_storeReadyPrefix$uid') ?? false;
+
+  Future<void> setStoreReady(String uid, bool ready) async {
+    if (ready) {
+      await _prefs.setBool('$_storeReadyPrefix$uid', true);
+    } else {
+      await _prefs.remove('$_storeReadyPrefix$uid');
+    }
+  }
 
   Future<void> setCurrencyCode(String code) async {
     await _prefs.setString(_currencyKey, code);

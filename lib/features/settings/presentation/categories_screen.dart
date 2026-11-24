@@ -18,10 +18,9 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
-  TransactionType _type = TransactionType.gave;
+  TransactionType _type = TransactionType.purchase;
 
-  CategoryScope get _scope =>
-      _type == TransactionType.gave ? CategoryScope.gave : CategoryScope.got;
+  CategoryScope get _scope => _type.categoryScope;
 
   void _openForm({CategoryModel? category}) {
     Navigator.of(context).push(
@@ -38,9 +37,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   Widget build(BuildContext context) {
     final s = ref.watch(appStringsProvider);
     final urdu = ref.watch(localeUrduProvider);
-    final categories = _scope == CategoryScope.gave
-        ? ref.watch(gaveCategoriesProvider)
-        : ref.watch(gotCategoriesProvider);
+    final categories = ref.watch(categoriesForScopeProvider(_scope));
 
     return Scaffold(
       backgroundColor: AppColors.dashboardSurface,

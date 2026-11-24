@@ -16,6 +16,35 @@ abstract final class CategoryIcons {
   ];
 
   static const List<IconData> pickable = [
+    // Shop / stock
+    Icons.eco_rounded,
+    Icons.grass_rounded,
+    Icons.set_meal_rounded,
+    Icons.egg_rounded,
+    Icons.bakery_dining_rounded,
+    Icons.local_grocery_store_rounded,
+    Icons.local_drink_rounded,
+    Icons.takeout_dining_rounded,
+    Icons.inventory_2_rounded,
+    Icons.lunch_dining_rounded,
+    Icons.blender_rounded,
+    Icons.icecream_rounded,
+    Icons.local_pizza_rounded,
+    Icons.kebab_dining_rounded,
+    Icons.coffee_rounded,
+    // Shop expenses
+    Icons.store_rounded,
+    Icons.people_alt_rounded,
+    Icons.propane_tank_rounded,
+    Icons.local_shipping_rounded,
+    Icons.request_quote_rounded,
+    Icons.cleaning_services_rounded,
+    Icons.campaign_rounded,
+    // Sales
+    Icons.point_of_sale_rounded,
+    Icons.delivery_dining_rounded,
+    Icons.room_service_rounded,
+    // General
     Icons.restaurant_rounded,
     Icons.fastfood_rounded,
     Icons.local_cafe_rounded,
@@ -64,5 +93,13 @@ abstract final class CategoryIcons {
   static int colorForIcon(int iconCodePoint) {
     final i = pickable.indexWhere((ic) => ic.codePoint == iconCodePoint);
     return colorForIndex(i >= 0 ? i : 0);
+  }
+
+  /// Returns a const [IconData] from [pickable] — safe for release icon tree-shaking.
+  static IconData iconForCodePoint(int codePoint) {
+    for (final icon in pickable) {
+      if (icon.codePoint == codePoint) return icon;
+    }
+    return Icons.category_rounded;
   }
 }

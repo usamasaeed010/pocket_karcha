@@ -14,19 +14,20 @@ class StorageService {
   StorageFileApi get _bucket =>
       _client.storage.from(SupabaseConfig.mediaBucket);
 
-  Future<String> uploadReceipt({
-    required String uid,
-    required String expenseId,
-    required File file,
-  }) async {
-    final compressed = await ImageCompressor.compress(
-      file,
-      preset: ImageCompressPreset.receipt,
-    );
-    final path = 'receipts/$uid/$expenseId.jpg';
-    await _uploadJpeg(path, compressed);
-    return _bucket.getPublicUrl(path);
-  }
+  // Image attachments (receipts) are disabled for now.
+  // Future<String> uploadReceipt({
+  //   required String uid,
+  //   required String expenseId,
+  //   required File file,
+  // }) async {
+  //   final compressed = await ImageCompressor.compress(
+  //     file,
+  //     preset: ImageCompressPreset.receipt,
+  //   );
+  //   final path = 'receipts/$uid/$expenseId.jpg';
+  //   await _uploadJpeg(path, compressed);
+  //   return _bucket.getPublicUrl(path);
+  // }
 
   Future<String> uploadAvatar({
     required String uid,

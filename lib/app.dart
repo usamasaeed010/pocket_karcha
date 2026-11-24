@@ -11,7 +11,9 @@ import 'package:pocket_karcha/features/auth/presentation/complete_profile_screen
 import 'package:pocket_karcha/features/home/presentation/home_screen.dart';
 import 'package:pocket_karcha/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:pocket_karcha/features/splash/presentation/splash_screen.dart';
+import 'package:pocket_karcha/features/store_setup/presentation/store_setup_screen.dart';
 import 'package:pocket_karcha/providers/locale_provider.dart';
+import 'package:pocket_karcha/shared/widgets/app_snackbar.dart';
 
 class PocketKarchaApp extends ConsumerWidget {
   const PocketKarchaApp({super.key});
@@ -30,12 +32,14 @@ class PocketKarchaApp extends ConsumerWidget {
           if (analytics != null)
             FirebaseAnalyticsObserver(analytics: analytics),
         ],
+        scaffoldMessengerKey: rootMessengerKey,
         initialRoute: AppRoutes.splash,
         routes: {
           AppRoutes.splash: (_) => const SplashScreen(),
           AppRoutes.onboarding: (_) => const OnboardingScreen(),
           AppRoutes.auth: (_) => const AuthScreen(),
           AppRoutes.completeProfile: (_) => const CompleteProfileScreen(),
+          AppRoutes.storeSetup: (_) => const StoreSetupScreen(),
           AppRoutes.home: (_) => const HomeScreen(),
         },
       ),

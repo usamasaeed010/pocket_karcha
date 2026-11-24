@@ -9,19 +9,23 @@ class HistoryTransactionTile extends ConsumerWidget {
     super.key,
     required this.expense,
     required this.currencyCode,
-    this.onTap,
+    this.onOptions,
+    // Image attachments are disabled for now (tap used to open the receipt).
+    // this.onTap,
   });
 
   final ExpenseModel expense;
   final String currencyCode;
-  final VoidCallback? onTap;
+  final VoidCallback? onOptions;
+  // final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return TransactionListTile(
       expense: expense,
       currencyCode: currencyCode,
-      onViewReceipt: onTap,
+      // onViewReceipt: onTap, // Image attachments are disabled for now.
+      onOptions: onOptions,
       showTypeLabel: true,
     );
   }
